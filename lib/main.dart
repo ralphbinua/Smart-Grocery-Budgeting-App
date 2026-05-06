@@ -47,22 +47,25 @@ class _SmartGroceryAppState extends State<SmartGroceryApp> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(innerContext),
-            child: const Text("Cancel")
+            child: const Text("Cancel"),
           ),
           ElevatedButton(
             onPressed: () {
               // We use 'context' from the build method to access the Provider
               final budget = double.tryParse(controller.text) ?? 0;
-              Provider.of<CartProvider>(context, listen: false).setBudget(budget);
+              Provider.of<CartProvider>(
+                context,
+                listen: false,
+              ).setBudget(budget);
               Navigator.pop(innerContext);
 
               // Optional: Show a confirmation toast
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Budget set to ₱$budget")),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text("Budget set to ₱$budget")));
             },
             child: const Text("Save"),
-          )
+          ),
         ],
       ),
     );
@@ -74,7 +77,7 @@ class _SmartGroceryAppState extends State<SmartGroceryApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true
+        useMaterial3: true,
       ),
       // Use a Builder here so the 'context' has access to the Theme and Providers
       home: Builder(
@@ -85,7 +88,7 @@ class _SmartGroceryAppState extends State<SmartGroceryApp> {
               IconButton(
                 icon: const Icon(Icons.account_balance_wallet),
                 onPressed: () => _showBudgetDialog(context),
-              )
+              ),
             ],
           ),
           body: _screens[_selectedIndex],
@@ -93,8 +96,14 @@ class _SmartGroceryAppState extends State<SmartGroceryApp> {
             currentIndex: _selectedIndex,
             onTap: (index) => setState(() => _selectedIndex = index),
             items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Shop'),
-              BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart),
+                label: 'Shop',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                label: 'History',
+              ),
             ],
           ),
         ),
