@@ -1,0 +1,20 @@
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
+class SocketService {
+  late IO.Socket socket;
+
+  void connectToServer(Function(dynamic) onScanReceived) {
+    // Connect to your Node.js backend
+    socket = IO.io('http://192.168.1.XX:3000', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    socket.connect();
+
+    // Listen for the event sent by your Node.js backend when the IoT device scans
+    socket.on('new_item_scanned', (data) {
+      onScanReceived(data);
+    });
+  }
+}
