@@ -5,7 +5,7 @@ import 'providers/cart_provider.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/ai_recommendations_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -53,7 +53,7 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
     DashboardScreen(),
     AIRecommendationsScreen(),
     HistoryScreen(),
-    ProfileScreen(),
+    SettingsScreen(),
   ];
 
   @override
@@ -102,7 +102,7 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
                   ? '${cart.items.where((i) => i.alternative != null).length}'
                   : null),
               _navItem(2, Icons.history_rounded, Icons.history_rounded, 'History'),
-              _navItem(3, Icons.person_rounded, Icons.person_outline_rounded, 'Profile'),
+              _navItem(3, Icons.settings_rounded, Icons.settings_outlined, 'Settings'),
             ],
           ),
         ),

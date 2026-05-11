@@ -3,21 +3,18 @@ import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../theme/app_theme.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _aiSuggestionsEnabled = true;
   bool _iotAutoConnect = true;
   double _monthlyBudget = 5000.0;
-  final String _userName = 'Juan Dela Cruz';
-  final String _userEmail = 'juan.delacruz@smartcart.ph';
-
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
@@ -33,9 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildProfileHeader(),
-                  const SizedBox(height: 20),
-                  _buildMonthlyStats(cart),
+                  _buildSessionSection(),
                   const SizedBox(height: 20),
                   _buildBudgetSection(context, cart),
                   const SizedBox(height: 20),
@@ -62,113 +57,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppColors.bg,
       title: const Row(
         children: [
-          Icon(Icons.person_rounded, color: AppColors.primary, size: 22),
+          Icon(Icons.settings_rounded, color: AppColors.primary, size: 22),
           SizedBox(width: 10),
-          Text('Profile & Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text('Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
         ],
       ),
     );
   }
 
-  Widget _buildProfileHeader() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0D2419), Color(0xFF0D1F35)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
+  Widget _buildSessionSection() {
+    return _sectionCard(
+      title: 'Session',
+      icon: Icons.account_circle_rounded,
+      iconColor: AppColors.primary,
+      children: [
+        _settingRow(
+          label: 'Guest Mode',
+          subtitle: 'Data is saved locally on device',
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: AppColors.primaryGradient),
-              shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 20)],
+              color: AppColors.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Center(
-              child: Text(
-                _userName.split(' ').map((n) => n[0]).take(2).join(),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.black),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_userName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                const SizedBox(height: 4),
-                Text(_userEmail, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.verified_rounded, color: AppColors.primary, size: 13),
-                      SizedBox(width: 4),
-                      Text('Smart Shopper', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ),
+                Icon(Icons.cloud_off_rounded, color: AppColors.primary, size: 13),
+                SizedBox(width: 4),
+                Text('Local', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 20),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthlyStats(CartProvider cart) {
-    final totalHistorySpent = cart.history.fold(0.0, (s, h) => s + h.totalSpent);
-    final totalHistorySaved = cart.history.fold(0.0, (s, h) => s + h.totalSaved);
-
-    return Row(
-      children: [
-        _statBox('Total Spent', '₱${totalHistorySpent.toStringAsFixed(0)}', AppColors.info, Icons.payments_rounded),
-        const SizedBox(width: 10),
-        _statBox('AI Saved', '₱${totalHistorySaved.toStringAsFixed(0)}', AppColors.success, Icons.savings_rounded),
-        const SizedBox(width: 10),
-        _statBox('Trips', '${cart.history.length}', AppColors.accentLight, Icons.shopping_bag_rounded),
+        ),
       ],
-    );
-  }
-
-  Widget _statBox(String label, String value, Color color, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF1E293B)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: color)),
-            const SizedBox(height: 3),
-            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-          ],
-        ),
-      ),
     );
   }
 
@@ -220,11 +142,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 inactiveColor: const Color(0xFF1E293B),
                 onChanged: (v) => setState(() => _monthlyBudget = v),
               ),
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('₱500', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
-                  const Text('₱20,000', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                  Text('₱500', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                  Text('₱20,000', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
                 ],
               ),
             ],
@@ -237,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildPreferencesSection() {
     return _sectionCard(
       title: 'Preferences',
-      icon: Icons.settings_rounded,
+      icon: Icons.tune_rounded,
       iconColor: AppColors.info,
       children: [
         _toggleRow(
@@ -382,6 +304,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           trailing,
         ],
+      ),
+    );
+  }
+
+  Widget _actionRow({required String label, required IconData icon, Color? iconColor, Color? textColor, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppColors.textSecondary, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label, style: TextStyle(fontSize: 14, color: textColor ?? AppColors.textPrimary, fontWeight: FontWeight.w500)),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
+          ],
+        ),
       ),
     );
   }
