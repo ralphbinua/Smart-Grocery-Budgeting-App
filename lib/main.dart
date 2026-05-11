@@ -67,8 +67,82 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
     )..repeat(reverse: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkInitialBudget();
+      _startOnboardingFlow();
     });
+  }
+
+  void _startOnboardingFlow() async {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    
+    // Clear previous session preferences so it always asks on startup
+    await cart.setScannerType(null);
+    cart.setBudget(0.0); // Reset budget to 0 for a fresh session
+
+    if (mounted) {
+      _showScannerSelectionDialog();
+    }
+  }
+
+  void _showScannerSelectionDialog() {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.qr_code_scanner_rounded, color: AppColors.primary, size: 22),
+            SizedBox(width: 10),
+            Text('Choose Scanner', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Select your preferred input method for this shopping session.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            const SizedBox(height: 20),
+            _selectionTile(
+              icon: Icons.camera_alt_rounded,
+              title: 'Phone Camera',
+              subtitle: 'Scan barcodes using your phone',
+              onTap: () {
+                cart.setScannerType('phone');
+                Navigator.pop(ctx);
+                _checkInitialBudget();
+              },
+            ),
+            const SizedBox(height: 12),
+            _selectionTile(
+              icon: Icons.memory_rounded,
+              title: 'IoT Scanner',
+              subtitle: 'Use the built-in Smart Cart scanner',
+              onTap: () {
+                cart.setScannerType('iot');
+                Navigator.pop(ctx);
+                _checkInitialBudget();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _selectionTile({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFF1E293B))),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+        child: Icon(icon, color: AppColors.primary, size: 20),
+      ),
+      title: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+    );
   }
 
   void _checkInitialBudget() {
@@ -82,7 +156,7 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
     final controller = TextEditingController();
     showDialog(
       context: context,
-      barrierDismissible: false, // force user to set it
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -96,7 +170,7 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Welcome! Please enter your shopping budget for this trip.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            const Text('Enter your shopping budget for this trip.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,

@@ -389,7 +389,15 @@ class DashboardScreen extends StatelessWidget {
             ),
           )
         : FloatingActionButton.extended(
-            onPressed: () => _showScannerChoice(context, cart),
+            onPressed: () {
+              if (cart.scannerType == 'phone') {
+                _openPhoneCamera(context, cart);
+              } else if (cart.scannerType == 'iot') {
+                _triggerIoTScan(context, cart);
+              } else {
+                _showScannerChoice(context, cart);
+              }
+            },
             backgroundColor: Colors.transparent,
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
