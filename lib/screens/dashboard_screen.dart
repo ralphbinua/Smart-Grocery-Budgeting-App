@@ -487,7 +487,6 @@ class DashboardScreen extends StatelessWidget {
   }
 
   void _showBudgetDialog(BuildContext context) {
-
     final controller = TextEditingController();
     showDialog(
       context: context,

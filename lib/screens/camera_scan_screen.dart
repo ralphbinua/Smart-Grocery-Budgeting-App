@@ -41,8 +41,6 @@ class _CameraScanScreenState extends State<CameraScanScreen> {
           _isProcessing = true;
         });
 
-        // Vibrate or play a sound here if desired
-        
         // Go back and process
         Navigator.pop(context, barcode.rawValue);
       }
@@ -60,7 +58,6 @@ class _CameraScanScreenState extends State<CameraScanScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [],
       ),
       extendBodyBehindAppBar: true,
       body: Stack(
