@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../models/cart_item.dart';
 import '../models/purchase_history.dart';
+import '../services/openai_service.dart';
 import 'dart:math';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class CartProvider with ChangeNotifier {
   double _budgetLimit = 0.0;
   List<CartItem> _items = [];
   bool _isConnected = false;
   bool _isScanning = false;
-  final List<PurchaseHistory> _history = _generateMockHistory();
+  final List<PurchaseHistory> _history = [];
 
   // Getters
   double get budgetLimit => _budgetLimit;
@@ -133,27 +136,83 @@ class CartProvider with ChangeNotifier {
   void simulateScan() async {
     _isScanning = true;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1200));
 
     final mockItems = [
-      {'name': 'Nestle Milk 1L', 'price': 98.0, 'category': 'Dairy', 'alt': {'name': 'Magnolia Milk 1L', 'price': 79.0}},
-      {'name': 'Gardenia Bread', 'price': 68.0, 'category': 'Bakery', 'alt': {'name': 'SunMaid Bread', 'price': 55.0}},
-      {'name': 'Lucky Me Noodles', 'price': 15.0, 'category': 'Instant Food', 'alt': null},
-      {'name': 'C2 Green Tea 500ml', 'price': 25.0, 'category': 'Beverages', 'alt': {'name': 'Wilkins Water 500ml', 'price': 12.0}},
-      {'name': 'Oishi Prawn Crackers', 'price': 35.0, 'category': 'Snacks', 'alt': {'name': 'Nova Chips', 'price': 28.0}},
-      {'name': 'Purefoods Hotdog 500g', 'price': 145.0, 'category': 'Meat', 'alt': {'name': 'CDO Hotdog 500g', 'price': 118.0}},
-      {'name': 'San Miguel Beer 330ml', 'price': 55.0, 'category': 'Beverages', 'alt': null},
-      {'name': 'Century Tuna 155g', 'price': 42.0, 'category': 'Canned Goods', 'alt': {'name': 'Sunshine Tuna 155g', 'price': 35.0}},
+      {'name': 'Nestle Milk 1L', 'price': 98.0, 'category': 'Dairy'},
+      {'name': 'Gardenia Bread', 'price': 68.0, 'category': 'Bakery'},
+      {'name': 'Lucky Me Noodles', 'price': 15.0, 'category': 'Instant Food'},
+      {'name': 'C2 Green Tea 500ml', 'price': 25.0, 'category': 'Beverages'},
+      {'name': 'Oishi Prawn Crackers', 'price': 35.0, 'category': 'Snacks'},
+      {'name': 'Purefoods Hotdog 500g', 'price': 145.0, 'category': 'Meat'},
+      {'name': 'San Miguel Beer 330ml', 'price': 55.0, 'category': 'Beverages'},
+      {'name': 'Century Tuna 155g', 'price': 42.0, 'category': 'Canned Goods'},
     ];
 
     final random = Random();
     final pick = mockItems[random.nextInt(mockItems.length)];
-    final rawAlt = pick['alt'];
+    final String name = pick['name'] as String;
+    final double price = pick['price'] as double;
+    final String category = pick['category'] as String;
+
+    // Fetch dynamic alternative from Google Gemini AI
+    final aiAlternative = await AIService.getAlternative(name, price, category);
+
     addItemWithAI(
-      pick['name'] as String,
-      pick['price'] as double,
-      rawAlt != null ? Map<String, dynamic>.from(rawAlt as Map) : null,
-      category: pick['category'] as String,
+      name,
+      price,
+      aiAlternative,
+      category: category,
+    );
+
+    _isScanning = false;
+    notifyListeners();
+  }
+
+  void processBarcode(String barcode) async {
+    _isScanning = true;
+    notifyListeners();
+
+    String name = 'Unknown Product';
+    String category = 'General';
+    
+    // Generate a deterministic fake price between 10 and 300 since Open Food Facts doesn't provide price
+    final double price = 10.0 + (barcode.hashCode.abs() % 290);
+
+    try {
+      final url = Uri.parse('https://world.openfoodfacts.org/api/v0/product/$barcode.json');
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 1 && data['product'] != null) {
+          final product = data['product'];
+          
+          if (product['product_name'] != null && product['product_name'].toString().isNotEmpty) {
+            name = product['product_name'];
+          }
+          
+          if (product['categories'] != null && product['categories'].toString().isNotEmpty) {
+            // Open food facts returns a comma separated list of categories. Grab the first one.
+            final cats = product['categories'].toString().split(',');
+            if (cats.isNotEmpty) {
+              category = cats.first.trim();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching product: $e');
+    }
+
+    // Fetch dynamic alternative from Google Gemini AI
+    final aiAlternative = await AIService.getAlternative(name, price, category);
+
+    addItemWithAI(
+      name,
+      price,
+      aiAlternative,
+      category: category,
+      barcode: barcode,
     );
 
     _isScanning = false;
@@ -170,48 +229,4 @@ class CartProvider with ChangeNotifier {
     return months[m - 1];
   }
 
-  static List<PurchaseHistory> _generateMockHistory() {
-    return [
-      PurchaseHistory(
-        id: '1',
-        date: 'May 05, 2026',
-        storeName: 'SM Supermarket',
-        items: [
-          HistoryItem(name: 'Nestle Milk 1L', price: 98.0, quantity: 2, category: 'Dairy'),
-          HistoryItem(name: 'Gardenia Bread', price: 68.0, quantity: 1, category: 'Bakery'),
-          HistoryItem(name: 'Lucky Me Noodles', price: 15.0, quantity: 5, category: 'Instant Food'),
-          HistoryItem(name: 'Purefoods Hotdog 500g', price: 145.0, quantity: 1, category: 'Meat'),
-        ],
-        totalSpent: 437.0,
-        budgetLimit: 500.0,
-        totalSaved: 62.0,
-      ),
-      PurchaseHistory(
-        id: '2',
-        date: 'April 28, 2026',
-        storeName: 'Robinsons Supermarket',
-        items: [
-          HistoryItem(name: 'Century Tuna 155g', price: 42.0, quantity: 3, category: 'Canned Goods'),
-          HistoryItem(name: 'C2 Green Tea 500ml', price: 25.0, quantity: 4, category: 'Beverages'),
-          HistoryItem(name: 'Oishi Prawn Crackers', price: 35.0, quantity: 2, category: 'Snacks'),
-        ],
-        totalSpent: 296.0,
-        budgetLimit: 350.0,
-        totalSaved: 24.0,
-      ),
-      PurchaseHistory(
-        id: '3',
-        date: 'April 20, 2026',
-        storeName: 'Puregold',
-        items: [
-          HistoryItem(name: 'Nestle Milk 1L', price: 98.0, quantity: 1, category: 'Dairy'),
-          HistoryItem(name: 'Lucky Me Noodles', price: 15.0, quantity: 10, category: 'Instant Food'),
-          HistoryItem(name: 'San Miguel Beer 330ml', price: 55.0, quantity: 6, category: 'Beverages'),
-        ],
-        totalSpent: 548.0,
-        budgetLimit: 600.0,
-        totalSaved: 38.0,
-      ),
-    ];
-  }
 }

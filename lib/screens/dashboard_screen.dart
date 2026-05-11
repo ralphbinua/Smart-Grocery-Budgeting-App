@@ -7,6 +7,7 @@ import '../widgets/cart_item_tile.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/scan_animation.dart';
 import '../widgets/stat_card.dart';
+import 'camera_scan_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -388,7 +389,7 @@ class DashboardScreen extends StatelessWidget {
             ),
           )
         : FloatingActionButton.extended(
-            onPressed: () => Provider.of<CartProvider>(context, listen: false).simulateScan(),
+            onPressed: () => _showScannerChoice(context),
             backgroundColor: Colors.transparent,
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -408,6 +409,64 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
           );
+  }
+
+  void _showScannerChoice(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Choose Scanner', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const SizedBox(height: 16),
+            ListTile(
+              onTap: () async {
+                Navigator.pop(ctx);
+                final barcode = await Navigator.push<String>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CameraScanScreen()),
+                );
+                if (barcode != null && context.mounted) {
+                  Provider.of<CartProvider>(context, listen: false).processBarcode(barcode);
+                }
+              },
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+              ),
+              title: const Text('Phone Camera', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+              subtitle: const Text('Use your device camera to scan barcodes', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              onTap: () {
+                Navigator.pop(ctx);
+                // Simulate an IoT scan triggering
+                Provider.of<CartProvider>(context, listen: false).simulateScan();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Waiting for IoT scanner...'), duration: Duration(seconds: 1)),
+                );
+              },
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppColors.info.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.memory_rounded, color: AppColors.info),
+              ),
+              title: const Text('IoT Scanner', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+              subtitle: const Text('Use the scanner on your Smart Cart', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showBudgetDialog(BuildContext context) {

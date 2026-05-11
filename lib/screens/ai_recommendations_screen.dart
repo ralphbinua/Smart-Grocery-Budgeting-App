@@ -24,37 +24,45 @@ class AIRecommendationsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildAIHeader(itemsWithAlt.length, cart.totalSavedByAI),
-                  const SizedBox(height: 20),
-                  _buildTipsCard(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   const Text('Smart Swap Recommendations', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
                   const Text('Based on your cart — cheaper alternatives available', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
           if (itemsWithAlt.isEmpty)
-            SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState())
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildEmptyState(),
+                    const SizedBox(height: 60),
+                    _buildTipsCard(),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            )
           else
             SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildSwapCard(context, itemsWithAlt[index]),
-                childCount: itemsWithAlt.length,
+                (context, index) {
+                  if (index == itemsWithAlt.length) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildTipsCard(),
+                    );
+                  }
+                  return _buildSwapCard(context, itemsWithAlt[index]);
+                },
+                childCount: itemsWithAlt.length + 1,
               ),
             ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  _buildAlgorithmCard(),
-                  const SizedBox(height: 80),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -107,16 +115,18 @@ class AIRecommendationsScreen extends StatelessWidget {
                 const Text('AI Cost Engine', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                 const SizedBox(height: 4),
                 Text('$count product swap${count == 1 ? '' : 's'} found', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.trending_down_rounded, color: AppColors.success, size: 16),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text('Potential savings: ₱${saved.toStringAsFixed(2)}', style: const TextStyle(fontSize: 13, color: AppColors.success, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                ),
+                if (saved > 0) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.trending_down_rounded, color: AppColors.success, size: 16),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text('Potential savings: ₱${saved.toStringAsFixed(2)}', style: const TextStyle(fontSize: 13, color: AppColors.success, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -149,14 +159,14 @@ class AIRecommendationsScreen extends StatelessWidget {
               Text('Smart Shopping Tips', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           ...tips.map((tip) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(tip.$1, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(child: Text(tip.$2, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
               ],
             ),
@@ -173,7 +183,7 @@ class AIRecommendationsScreen extends StatelessWidget {
     final pctOff = ((savings / item.price) * 100).toStringAsFixed(0);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -183,70 +193,62 @@ class AIRecommendationsScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Current item
             Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: AppColors.danger.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.remove_circle_outline_rounded, color: AppColors.danger, size: 20),
+                  child: const Icon(Icons.remove, color: AppColors.danger, size: 16),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary, decoration: TextDecoration.lineThrough)),
+                      Text(item.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
                       Text(item.category, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
                     ],
                   ),
                 ),
-                Text('₱${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textSecondary, decoration: TextDecoration.lineThrough)),
+                Text('₱${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-              child: Row(
-                children: [
-                  Container(width: 30, height: 1, color: const Color(0xFF1E293B)),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.swap_vert_rounded, color: AppColors.accent, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(child: Container(height: 1, color: const Color(0xFF1E293B))),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: AppColors.purpleGradient),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text('AI SWAP', style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+            Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                const Divider(color: Color(0xFF1E293B), height: 30),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: AppColors.purpleGradient),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                ],
-              ),
+                  child: const Text('AI SWAP', style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                ),
+              ],
             ),
-            // Alternative item
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_circle_outline_rounded, color: AppColors.success, size: 20),
+                  child: const Icon(Icons.check, color: AppColors.success, size: 16),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(altName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      Text(altName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                       const Text('Recommended alternative', style: TextStyle(fontSize: 11, color: AppColors.success)),
                     ],
                   ),
@@ -260,7 +262,7 @@ class AIRecommendationsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -283,70 +285,25 @@ class AIRecommendationsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                ElevatedButton.icon(
+                ElevatedButton(
                   onPressed: () {
                     Provider.of<CartProvider>(context, listen: false).acceptSwap(item.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Swapped to $altName!')),
                     );
                   },
-                  icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-                  label: const Text('Swap'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   ),
+                  child: const Text('Swap', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                 ),
               ],
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAlgorithmCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1E293B)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.memory_rounded, color: AppColors.accent, size: 18),
-              SizedBox(width: 8),
-              Text('How the AI Engine Works', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _algoStep('1', 'Barcode is scanned by IoT device', AppColors.info),
-          _algoStep('2', 'Product data fetched from cloud database', AppColors.accent),
-          _algoStep('3', 'AI analyzes category, brand & historical pricing', AppColors.warning),
-          _algoStep('4', 'Cheaper alternatives matched in same category', AppColors.success),
-          _algoStep('5', 'Recommendation displayed in real-time', AppColors.primary),
-        ],
-      ),
-    );
-  }
-
-  Widget _algoStep(String num, String label, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
-            child: Center(child: Text(num, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: color))),
-          ),
-          const SizedBox(width: 10),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
-        ],
       ),
     );
   }
@@ -358,10 +315,9 @@ class AIRecommendationsScreen extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: AppColors.bgCard,
+            decoration: const BoxDecoration(
+              color: Color(0xFF161F2E),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF1E293B)),
             ),
             child: const Icon(Icons.auto_awesome, size: 56, color: AppColors.textMuted),
           ),

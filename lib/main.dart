@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/cart_provider.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/history_screen.dart';
@@ -8,8 +9,9 @@ import 'screens/ai_recommendations_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -63,6 +65,72 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..repeat(reverse: true);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkInitialBudget();
+    });
+  }
+
+  void _checkInitialBudget() {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    if (cart.budgetLimit <= 0) {
+      _showBudgetSetupDialog();
+    }
+  }
+
+  void _showBudgetSetupDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false, // force user to set it
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.account_balance_wallet_rounded, color: AppColors.primary, size: 22),
+            SizedBox(width: 10),
+            Text('Set Your Budget', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Welcome! Please enter your shopping budget for this trip.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w700),
+              decoration: const InputDecoration(
+                hintText: '0.00',
+                prefixText: '₱ ',
+                prefixStyle: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 22),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              final budget = double.tryParse(controller.text) ?? 0;
+              if (budget > 0) {
+                Provider.of<CartProvider>(context, listen: false).setBudget(budget);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Budget set to ₱${budget.toStringAsFixed(2)}'),
+                    backgroundColor: AppColors.bgCardAlt,
+                  ),
+                );
+              }
+            },
+            child: const Text('Start Shopping'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
