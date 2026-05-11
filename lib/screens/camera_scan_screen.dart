@@ -20,6 +20,7 @@ class _CameraScanScreenState extends State<CameraScanScreen> {
       detectionSpeed: DetectionSpeed.noDuplicates,
       facing: CameraFacing.back,
       torchEnabled: false,
+      formats: [BarcodeFormat.all], // Support all barcode types
     );
   }
 
@@ -84,6 +85,8 @@ class _CameraScanScreenState extends State<CameraScanScreen> {
                   Positioned(top: 0, right: 0, child: _buildCorner(top: true, left: false)),
                   Positioned(bottom: 0, left: 0, child: _buildCorner(top: false, left: true)),
                   Positioned(bottom: 0, right: 0, child: _buildCorner(top: false, left: false)),
+                  // Scanning Line
+                  const _ScanningLine(),
                 ],
               ),
             ),
@@ -121,6 +124,65 @@ class _CameraScanScreenState extends State<CameraScanScreen> {
           bottomRight: !top && !left ? const Radius.circular(18) : Radius.zero,
         ),
       ),
+    );
+  }
+}
+
+class _ScanningLine extends StatefulWidget {
+  const _ScanningLine();
+
+  @override
+  State<_ScanningLine> createState() => _ScanningLineState();
+}
+
+class _ScanningLineState extends State<_ScanningLine> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Positioned(
+          top: _controller.value * 250,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 2,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withOpacity(0),
+                  AppColors.primary,
+                  AppColors.primary.withOpacity(0),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.5),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -12,6 +12,9 @@ class SocketService {
 
     socket.connect();
 
+    socket.onConnect((_) => print('SocketService: Connected to server'));
+    socket.onConnectError((data) => print('SocketService: Connection Error: $data'));
+
     // Listen for the event sent by your Node.js backend when the IoT device scans
     socket.on('new_item_scanned', (data) {
       onScanReceived(data);

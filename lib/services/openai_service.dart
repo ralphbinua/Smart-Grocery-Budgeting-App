@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -8,7 +9,7 @@ class AIService {
     final apiKey = dotenv.env['GEMINI_API_KEY'] ?? dotenv.env['OPENAI_API_KEY'];
     
     if (apiKey == null || apiKey.isEmpty || apiKey.contains('your_')) {
-      print('API Key is missing or invalid. Please check your .env file.');
+      debugPrint('AIService: API Key is missing or invalid.');
       return null;
     }
 
@@ -55,11 +56,11 @@ If no realistic cheaper alternative exists, respond with exactly: null
         
         return jsonDecode(content) as Map<String, dynamic>;
       } else {
-        print('Gemini Error: ${response.statusCode} - ${response.body}');
+        debugPrint('Gemini Error: ${response.statusCode} - ${response.body}');
         return null;
       }
     } catch (e) {
-      print('Gemini Exception: $e');
+      debugPrint('Gemini Exception: $e');
       return null;
     }
   }

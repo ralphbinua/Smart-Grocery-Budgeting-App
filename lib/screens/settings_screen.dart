@@ -36,7 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 20),
                   _buildPreferencesSection(),
                   const SizedBox(height: 20),
-                  _buildIoTSection(),
+                  _buildIoTSection(cart),
                   const SizedBox(height: 20),
                   _buildAboutSection(),
                   const SizedBox(height: 80),
@@ -179,7 +179,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildIoTSection() {
+  Widget _buildIoTSection(CartProvider cart) {
     return _sectionCard(
       title: 'IoT Cart Settings',
       icon: Icons.sensors_rounded,
@@ -205,14 +205,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const Divider(color: Color(0xFF1E293B), height: 1),
-        _settingRow(
+        _actionRow(
           label: 'Scanner Type',
-          subtitle: 'Barcode + RFID',
-          trailing: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.textMuted, size: 18),
+          icon: cart.scannerType == 'phone' ? Icons.camera_alt_rounded : Icons.qr_code_scanner_rounded,
+          iconColor: AppColors.textMuted,
+          onTap: () => _showScannerTypePicker(context, cart),
+          trailing: Text(
+            cart.scannerType == 'phone' ? 'Phone Camera' : cart.scannerType == 'iot' ? 'IoT Scanner' : 'Not Set',
+            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13),
+          ),
         ),
       ],
     );
   }
+
 
   Widget _buildAboutSection() {
     return _sectionCard(
@@ -308,7 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _actionRow({required String label, required IconData icon, Color? iconColor, Color? textColor, required VoidCallback onTap}) {
+  Widget _actionRow({required String label, required IconData icon, Color? iconColor, Color? textColor, Widget? trailing, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -320,12 +326,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Expanded(
               child: Text(label, style: TextStyle(fontSize: 14, color: textColor ?? AppColors.textPrimary, fontWeight: FontWeight.w500)),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
+            trailing ?? const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
           ],
         ),
       ),
     );
   }
+
+  void _showScannerTypePicker(BuildContext context, CartProvider cart) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bgCard,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Select Default Scanner', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const SizedBox(height: 16),
+            _pickerOption(
+              context,
+              'Phone Camera',
+              Icons.camera_alt_rounded,
+              'Use your device camera',
+              cart.scannerType == 'phone',
+              () => cart.setScannerType('phone'),
+            ),
+            const SizedBox(height: 12),
+            _pickerOption(
+              context,
+              'IoT Scanner',
+              Icons.memory_rounded,
+              'Use the scanner on your Smart Cart',
+              cart.scannerType == 'iot',
+              () => cart.setScannerType('iot'),
+            ),
+            const SizedBox(height: 12),
+            _pickerOption(
+              context,
+              'Always Ask',
+              Icons.question_mark_rounded,
+              'Choose every time you scan',
+              cart.scannerType == null,
+              () => cart.setScannerType(null),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pickerOption(BuildContext context, String title, IconData icon, String subtitle, bool selected, VoidCallback onTap) {
+    return InkWell(
+      onTap: () {
+        onTap();
+        Navigator.pop(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: selected ? AppColors.primary.withOpacity(0.3) : const Color(0xFF1E293B)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: selected ? AppColors.primary : AppColors.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(color: AppColors.textPrimary, fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
+                  Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                ],
+              ),
+            ),
+            if (selected) const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   void _showBudgetEdit(BuildContext context, CartProvider cart) {
     final controller = TextEditingController(text: cart.budgetLimit > 0 ? cart.budgetLimit.toStringAsFixed(0) : '');

@@ -389,7 +389,15 @@ class DashboardScreen extends StatelessWidget {
             ),
           )
         : FloatingActionButton.extended(
-            onPressed: () => _showScannerChoice(context),
+            onPressed: () {
+              if (cart.scannerType == null) {
+                _showScannerChoice(context, cart);
+              } else if (cart.scannerType == 'phone') {
+                _openPhoneCamera(context, cart);
+              } else {
+                _triggerIoTScan(context, cart);
+              }
+            },
             backgroundColor: Colors.transparent,
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -411,7 +419,7 @@ class DashboardScreen extends StatelessWidget {
           );
   }
 
-  void _showScannerChoice(BuildContext context) {
+  void _showScannerChoice(BuildContext context, CartProvider cart) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.bgCard,
@@ -429,12 +437,9 @@ class DashboardScreen extends StatelessWidget {
             ListTile(
               onTap: () async {
                 Navigator.pop(ctx);
-                final barcode = await Navigator.push<String>(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CameraScanScreen()),
-                );
-                if (barcode != null && context.mounted) {
-                  Provider.of<CartProvider>(context, listen: false).processBarcode(barcode);
+                await cart.setScannerType('phone');
+                if (context.mounted) {
+                  _openPhoneCamera(context, cart);
                 }
               },
               leading: Container(
@@ -447,13 +452,12 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ListTile(
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(ctx);
-                // Simulate an IoT scan triggering
-                Provider.of<CartProvider>(context, listen: false).simulateScan();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Waiting for IoT scanner...'), duration: Duration(seconds: 1)),
-                );
+                await cart.setScannerType('iot');
+                if (context.mounted) {
+                  _triggerIoTScan(context, cart);
+                }
               },
               leading: Container(
                 padding: const EdgeInsets.all(10),
@@ -469,7 +473,29 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  void _openPhoneCamera(BuildContext context, CartProvider cart) async {
+    final barcode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const CameraScanScreen()),
+    );
+    if (barcode != null && context.mounted) {
+      cart.processBarcode(barcode);
+    }
+  }
+
+  void _triggerIoTScan(BuildContext context, CartProvider cart) {
+    cart.simulateScan();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Waiting for IoT scanner...'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   void _showBudgetDialog(BuildContext context) {
+
     final controller = TextEditingController();
     showDialog(
       context: context,
