@@ -169,10 +169,11 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  void clearCart() {
+  Future<void> clearCart() async {
     if (_items.isEmpty) return;
     final now = DateTime.now();
-    _history.insert(0, PurchaseHistory(
+    
+    final newHistoryItem = PurchaseHistory(
       id: now.millisecondsSinceEpoch.toString(),
       date: '${_monthName(now.month)} ${now.day}, ${now.year}',
       items: _items.map((i) => HistoryItem(
@@ -184,7 +185,34 @@ class CartProvider with ChangeNotifier {
       totalSpent: totalSpent,
       budgetLimit: _budgetLimit,
       totalSaved: totalSavedByAI,
-    ));
+    );
+    
+    _history.insert(0, newHistoryItem);
+    
+    // Save to MongoDB Cloud Database via our Node.js Backend
+    try {
+      // Automatically updated to your computer's exact WiFi IP address for Android compatibility!
+      final url = Uri.parse('http://192.168.101.73:3000/api/trips'); 
+      await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'totalSpent': totalSpent,
+          'totalSaved': totalSavedByAI,
+          'items': _items.map((i) => {
+            'barcode': i.barcode,
+            'name': i.name,
+            'price': i.price,
+            'quantity': i.quantity,
+            'isAiSwapped': i.alternative == null // rough check if item was swapped
+          }).toList()
+        }),
+      );
+      debugPrint('[MongoDB] Checkout Trip successfully saved to Cloud!');
+    } catch (e) {
+      debugPrint('[MongoDB] Error saving trip: $e');
+    }
+
     _items = [];
     notifyListeners();
   }
@@ -215,29 +243,69 @@ class CartProvider with ChangeNotifier {
 
     String name = 'Unknown Product';
     String category = 'General';
-    // Generate a deterministic fake price between 10 and 300
-    final double price = 10.0 + (barcode.hashCode.abs() % 290);
+    double price = 0.0;
+    bool foundInDb = false;
 
+    // 1. Check our Custom MongoDB Cloud Database First!
     try {
-      final url = Uri.parse('https://world.openfoodfacts.org/api/v0/product/$barcode.json');
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      final dbUrl = Uri.parse('http://192.168.101.73:3000/api/products/$barcode');
+      final dbResponse = await http.get(dbUrl).timeout(const Duration(seconds: 3));
       
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 1 && data['product'] != null) {
-          final product = data['product'];
-          
-          final prodName = product['product_name'] ?? product['product_name_en'] ?? product['generic_name'] ?? 'Unknown Product';
-          final brands = product['brands'] ?? '';
-          name = brands.isNotEmpty ? '$brands - $prodName' : prodName;
-          
-          category = _parseCategory(product);
-        }
+      if (dbResponse.statusCode == 200) {
+        final data = json.decode(dbResponse.body);
+        name = data['name'];
+        category = data['category'] ?? 'General';
+        price = (data['latestPrice'] as num).toDouble();
+        foundInDb = true;
+        debugPrint('[MongoDB] Product found locally! $name at P$price');
       }
     } catch (e) {
-      debugPrint('Barcode API Error: $e');
+      debugPrint('[MongoDB] Product not in local DB, checking internet...');
     }
 
+    // 2. If not in DB, fallback to OpenFoodFacts (Crowdsource Mode)
+    if (!foundInDb) {
+      // Temporary fallback price until user edits it manually
+      price = 10.0 + (barcode.hashCode.abs() % 290); 
+      
+      try {
+        final url = Uri.parse('https://world.openfoodfacts.org/api/v0/product/$barcode.json');
+        final response = await http.get(url).timeout(const Duration(seconds: 5));
+        
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data['status'] == 1 && data['product'] != null) {
+            final product = data['product'];
+            final prodName = product['product_name'] ?? product['product_name_en'] ?? product['generic_name'] ?? 'Unknown Product';
+            final brands = product['brands'] ?? '';
+            name = brands.isNotEmpty ? '$brands - $prodName' : prodName;
+            category = _parseCategory(product);
+          }
+        }
+      } catch (e) {
+        debugPrint('Barcode API Error: $e');
+      }
+
+      // 3. Save this new item to MongoDB so it's there next time!
+      try {
+        final dbPostUrl = Uri.parse('http://192.168.101.73:3000/api/products');
+        await http.post(
+          dbPostUrl,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'barcode': barcode,
+            'name': name,
+            'category': category,
+            'latestPrice': price
+          }),
+        );
+        debugPrint('[MongoDB] New product saved to Cloud for future scans!');
+      } catch (e) {
+        debugPrint('[MongoDB] Error saving new product: $e');
+      }
+    }
+
+    // 4. Get AI recommendation
     final aiAlternative = await AIService.getAlternative(name, price, category);
 
     addItemWithAI(name, price, aiAlternative, category: category, barcode: barcode);
