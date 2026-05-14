@@ -4,18 +4,23 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AIService {
-  static Future<Map<String, dynamic>?> getAlternative(String name, double price, String category) async {
-    // Falls back to checking OPENAI_API_KEY in case you pasted it there
-    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? dotenv.env['OPENAI_API_KEY'];
-    
+  static Future<Map<String, dynamic>?> getAlternative(
+    String name,
+    double price,
+    String category,
+  ) async {
+    // Look for GROQ_API_KEY, or fallback to OPENAI_API_KEY
+    final apiKey = dotenv.env['GROQ_API_KEY'] ?? dotenv.env['OPENAI_API_KEY'] ?? dotenv.env['GEMINI_API_KEY'];
+
     if (apiKey == null || apiKey.isEmpty || apiKey.contains('your_')) {
       debugPrint('AIService: API Key is missing or invalid.');
       return null;
     }
 
-    final String apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=$apiKey';
+    final String apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
 
-    final prompt = '''
+    final prompt =
+        '''
 The user just scanned a grocery item: '$name' for $price PHP in the category '$category'.
 Suggest a cheaper, commonly available alternative product in the Philippines.
 Respond STRICTLY with a JSON object containing exactly two keys:
@@ -29,38 +34,50 @@ If no realistic cheaper alternative exists, respond with exactly: null
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
         },
         body: jsonEncode({
-          "contents": [{
-            "parts": [{"text": "You are a smart grocery shopping assistant that helps users save money by finding cheaper alternatives.\n\n" + prompt}]
-          }],
-          "generationConfig": {
-            "temperature": 0.3
-          }
+          "model": "llama-3.1-8b-instant", // Fast and free Llama 3.1 model
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a smart grocery shopping assistant that helps users save money by finding cheaper alternatives."
+            },
+            {
+              "role": "user",
+              "content": prompt
+            }
+          ],
+          "temperature": 0.3
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        
-        if (data['candidates'] == null || data['candidates'].isEmpty) return null;
-        
-        String content = data['candidates'][0]['content']['parts'][0]['text'].toString().trim();
-        
-        // Remove markdown JSON codeblocks if Gemini added them
-        if (content.startsWith('```json')) {
-          content = content.replaceAll('```json', '').replaceAll('```', '').trim();
-        }
-        
+
+        if (data['choices'] == null || data['choices'].isEmpty) return null;
+
+        String content = data['choices'][0]['message']['content'].toString().trim();
+
         if (content == 'null' || content.isEmpty) return null;
-        
-        return jsonDecode(content) as Map<String, dynamic>;
+
+        // Bulletproof JSON extraction: Find the first { and the last }
+        final int startIndex = content.indexOf('{');
+        final int endIndex = content.lastIndexOf('}');
+
+        if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+          final jsonString = content.substring(startIndex, endIndex + 1);
+          return jsonDecode(jsonString) as Map<String, dynamic>;
+        } else {
+          debugPrint('Groq returned invalid format: $content');
+          return null;
+        }
       } else {
-        debugPrint('Gemini Error: ${response.statusCode} - ${response.body}');
+        debugPrint('Groq Error: ${response.statusCode} - ${response.body}');
         return null;
       }
     } catch (e) {
-      debugPrint('Gemini Exception: $e');
+      debugPrint('Groq Exception: $e');
       return null;
     }
   }

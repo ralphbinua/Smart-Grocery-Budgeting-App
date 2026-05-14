@@ -5,7 +5,7 @@ class SocketService {
 
   void connectToServer(Function(dynamic) onScanReceived) {
     // Connect to your Node.js backend
-    socket = IO.io('http://192.168.101.73:3000', <String, dynamic>{
+    socket = IO.io('https://smart-grocery-budgeting-app.onrender.com', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });

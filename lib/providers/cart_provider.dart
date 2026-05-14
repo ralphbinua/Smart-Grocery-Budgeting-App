@@ -192,7 +192,7 @@ class CartProvider with ChangeNotifier {
     // Save to MongoDB Cloud Database via our Node.js Backend
     try {
       // Automatically updated to your computer's exact WiFi IP address for Android compatibility!
-      final url = Uri.parse('http://192.168.101.73:3000/api/trips'); 
+      final url = Uri.parse('https://smart-grocery-budgeting-app.onrender.com/api/trips'); 
       await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -248,7 +248,7 @@ class CartProvider with ChangeNotifier {
 
     // 1. Check our Custom MongoDB Cloud Database First!
     try {
-      final dbUrl = Uri.parse('http://192.168.101.73:3000/api/products/$barcode');
+      final dbUrl = Uri.parse('https://smart-grocery-budgeting-app.onrender.com/api/products/$barcode');
       final dbResponse = await http.get(dbUrl).timeout(const Duration(seconds: 3));
       
       if (dbResponse.statusCode == 200) {
@@ -288,7 +288,7 @@ class CartProvider with ChangeNotifier {
 
       // 3. Save this new item to MongoDB so it's there next time!
       try {
-        final dbPostUrl = Uri.parse('http://192.168.101.73:3000/api/products');
+        final dbPostUrl = Uri.parse('https://smart-grocery-budgeting-app.onrender.com/api/products');
         await http.post(
           dbPostUrl,
           headers: {'Content-Type': 'application/json'},
