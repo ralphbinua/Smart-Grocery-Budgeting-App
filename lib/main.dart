@@ -26,14 +26,17 @@ Future<void> main() async {
   );
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class SmartGroceryApp extends StatelessWidget {
   const SmartGroceryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      title: 'SmartCart – IoT Grocery Budget',
+      title: 'SmartCart',
       theme: AppTheme.dark,
       home: const _RootNavigation(),
     );

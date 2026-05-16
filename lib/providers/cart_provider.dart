@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart';
 import '../models/cart_item.dart';
 import '../models/purchase_history.dart';
 import '../services/openai_service.dart';
@@ -265,8 +266,7 @@ class CartProvider with ChangeNotifier {
 
     // 2. If not in DB, fallback to OpenFoodFacts (Crowdsource Mode)
     if (!foundInDb) {
-      // Temporary fallback price until user edits it manually
-      price = 10.0 + (barcode.hashCode.abs() % 290); 
+      bool foundInApi = false;
       
       try {
         final url = Uri.parse('https://world.openfoodfacts.org/api/v0/product/$barcode.json');
@@ -280,10 +280,31 @@ class CartProvider with ChangeNotifier {
             final brands = product['brands'] ?? '';
             name = brands.isNotEmpty ? '$brands - $prodName' : prodName;
             category = _parseCategory(product);
+            
+            // Temporary fallback price for API products until user edits it manually
+            price = 10.0 + (barcode.hashCode.abs() % 290); 
+            foundInApi = true;
           }
         }
       } catch (e) {
         debugPrint('Barcode API Error: $e');
+      }
+
+      if (!foundInApi) {
+        _isScanning = false;
+        notifyListeners();
+
+        final manualData = await _requestManualInput(barcode);
+        if (manualData == null) {
+          return; // User cancelled
+        }
+        
+        name = manualData['name'];
+        price = manualData['price'];
+        category = 'General';
+        
+        _isScanning = true;
+        notifyListeners();
       }
 
       // 3. Save this new item to MongoDB so it's there next time!
@@ -323,6 +344,76 @@ class CartProvider with ChangeNotifier {
     }
     return 'General';
   }
+
+  Future<Map<String, dynamic>?> _requestManualInput(String barcode) async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return null;
+
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Unknown Product', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('This barcode was not found in our database. Please enter the details manually.', style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Product Name',
+                labelStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: priceController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Price (₱)',
+                labelStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final price = double.tryParse(priceController.text);
+              if (nameController.text.isNotEmpty && price != null && price > 0) {
+                Navigator.pop(ctx, {'name': nameController.text.trim(), 'price': price});
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Save Product', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   String _randomBarcode() {
     final r = Random();

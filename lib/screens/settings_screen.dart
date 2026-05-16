@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../theme/app_theme.dart';
+import 'admin_dashboard_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -39,6 +40,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildIoTSection(cart),
                   const SizedBox(height: 20),
                   _buildAboutSection(),
+                  const SizedBox(height: 20),
+                  _buildAdminSection(context),
                   const SizedBox(height: 80),
                 ],
               ),
@@ -443,6 +446,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
             child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminSection(BuildContext context) {
+    return _sectionCard(
+      title: 'Developer',
+      icon: Icons.developer_mode_rounded,
+      iconColor: AppColors.warning,
+      children: [
+        _actionRow(
+          label: 'Admin Dashboard',
+          icon: Icons.admin_panel_settings_rounded,
+          iconColor: AppColors.textSecondary,
+          onTap: () => _showAdminLogin(context),
+        ),
+      ],
+    );
+  }
+
+  void _showAdminLogin(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Admin Login', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: const InputDecoration(
+            labelText: 'Password',
+            labelStyle: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text == 'admin123') { // Simple hardcoded password for now
+                Navigator.pop(ctx);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()));
+              } else {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid password')));
+              }
+            },
+            child: const Text('Login'),
           ),
         ],
       ),

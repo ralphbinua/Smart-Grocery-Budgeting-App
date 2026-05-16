@@ -99,6 +99,42 @@ app.get('/api/products/:barcode', async (req, res) => {
   }
 });
 
+// Get All Products
+app.get('/api/products', async (req, res) => {
+  try {
+    const products = await Product.find().sort({ name: 1 });
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Product
+app.put('/api/products/:barcode', async (req, res) => {
+  try {
+    const updatedProduct = await Product.findOneAndUpdate(
+      { barcode: req.params.barcode },
+      req.body,
+      { new: true }
+    );
+    if (!updatedProduct) return res.status(404).json({ message: 'Product not found' });
+    res.status(200).json(updatedProduct);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete Product
+app.delete('/api/products/:barcode', async (req, res) => {
+  try {
+    const deletedProduct = await Product.findOneAndDelete({ barcode: req.params.barcode });
+    if (!deletedProduct) return res.status(404).json({ message: 'Product not found' });
+    res.status(200).json({ message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log(`[Socket] A client connected: ${socket.id}`);
