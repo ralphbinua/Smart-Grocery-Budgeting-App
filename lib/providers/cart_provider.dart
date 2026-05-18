@@ -54,12 +54,7 @@ class CartProvider with ChangeNotifier {
   double get totalSavedByAI {
     double saved = 0;
     for (final item in _items) {
-      if (item.alternative != null) {
-        final altPrice = (item.alternative!['price'] as num).toDouble();
-        if (altPrice < item.price) {
-          saved += (item.price - altPrice) * item.quantity;
-        }
-      }
+      saved += item.savedAmount * item.quantity;
     }
     return saved;
   }
@@ -155,14 +150,16 @@ class CartProvider with ChangeNotifier {
     if (idx >= 0 && _items[idx].alternative != null) {
       final original = _items[idx];
       final alt = original.alternative!;
+      final altPrice = (alt['price'] as num).toDouble();
       
       _items[idx] = CartItem(
         id: original.id,
         name: alt['name'] as String,
-        price: (alt['price'] as num).toDouble(),
+        price: altPrice,
         category: original.category,
         barcode: original.barcode,
         alternative: null,
+        savedAmount: (original.price - altPrice > 0) ? (original.price - altPrice) : 0.0,
         quantity: original.quantity,
         scannedAt: original.scannedAt,
       );
@@ -205,7 +202,7 @@ class CartProvider with ChangeNotifier {
             'name': i.name,
             'price': i.price,
             'quantity': i.quantity,
-            'isAiSwapped': i.alternative == null // rough check if item was swapped
+            'isAiSwapped': i.savedAmount > 0
           }).toList()
         }),
       );

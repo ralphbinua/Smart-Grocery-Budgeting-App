@@ -7,6 +7,7 @@ class CartItem {
   final Map<String, dynamic>? alternative;
   final DateTime scannedAt;
   int quantity;
+  final double savedAmount;
 
   CartItem({
     required this.id,
@@ -15,6 +16,7 @@ class CartItem {
     required this.category,
     required this.barcode,
     this.alternative,
+    this.savedAmount = 0.0,
     int? quantity,
     DateTime? scannedAt,
   })  : quantity = quantity ?? 1,
@@ -30,6 +32,7 @@ class CartItem {
       category: category,
       barcode: barcode,
       alternative: alternative,
+      savedAmount: savedAmount,
       quantity: quantity ?? this.quantity,
       scannedAt: scannedAt,
     );
