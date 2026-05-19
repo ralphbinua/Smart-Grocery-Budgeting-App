@@ -110,6 +110,9 @@ class CartProvider with ChangeNotifier {
 
   // --- Cart Operations ---
   void addItemWithAI(String name, double price, Map<String, dynamic>? alternative, {String category = 'General', String barcode = ''}) {
+    final previouslyOver = isOverBudget;
+    final previouslyNear = isNearLimit;
+
     final existingIndex = _items.indexWhere((i) => i.name == name);
     if (existingIndex >= 0) {
       _items[existingIndex] = _items[existingIndex].copyWith(
@@ -126,6 +129,12 @@ class CartProvider with ChangeNotifier {
       ));
     }
     notifyListeners();
+
+    if (isOverBudget && !previouslyOver) {
+      _showOverBudgetAlert();
+    } else if (isNearLimit && !previouslyNear) {
+      _showNearLimitAlert();
+    }
   }
 
   void removeItem(String id) {
@@ -140,8 +149,17 @@ class CartProvider with ChangeNotifier {
     }
     final idx = _items.indexWhere((i) => i.id == id);
     if (idx >= 0) {
+      final previouslyOver = isOverBudget;
+      final previouslyNear = isNearLimit;
+
       _items[idx] = _items[idx].copyWith(quantity: quantity);
       notifyListeners();
+
+      if (isOverBudget && !previouslyOver) {
+        _showOverBudgetAlert();
+      } else if (isNearLimit && !previouslyNear) {
+        _showNearLimitAlert();
+      }
     }
   }
 
@@ -420,5 +438,192 @@ class CartProvider with ChangeNotifier {
   String _monthName(int m) {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return months[m - 1];
+  }
+
+  void _showOverBudgetAlert() {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFEF4444),
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Budget Limit Exceeded!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'This item puts you over your shopping budget limit by ₱${(totalSpent - budgetLimit).toStringAsFixed(2)}.',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF334155)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Acknowledge',
+                        style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showBudgetDialogFromAlert(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Adjust Budget',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  void _showNearLimitAlert() {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFFD97706),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Row(
+            children: [
+              const Icon(Icons.notifications_active_rounded, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Approaching Budget Limit', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                    Text('You have used over 85% of your trip budget. Remaining: ₱${remaining.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    });
+  }
+
+  void _showBudgetDialogFromAlert(BuildContext context) {
+    final controller = TextEditingController(text: budgetLimit > 0 ? budgetLimit.toStringAsFixed(0) : '');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF10B981), size: 22),
+            SizedBox(width: 10),
+            Text('Adjust Budget', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Set a new shopping budget for this trip.', style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                hintText: '0.00',
+                prefixText: '₱ ',
+                prefixStyle: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 22),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF10B981))),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final budget = double.tryParse(controller.text) ?? 0;
+              if (budget > 0) {
+                setBudget(budget);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Budget updated to ₱${budget.toStringAsFixed(2)}'),
+                    backgroundColor: const Color(0xFF1E293B),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Save Budget', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 }
