@@ -109,7 +109,7 @@ class CartProvider with ChangeNotifier {
   }
 
   // --- Cart Operations ---
-  void addItemWithAI(String name, double price, Map<String, dynamic>? alternative, {String category = 'General', String barcode = ''}) {
+  void addItemWithAI(String name, double price, Map<String, dynamic>? alternative, {String category = 'General', String barcode = '', int initialQuantity = 1}) {
     final previouslyOver = isOverBudget;
     final previouslyNear = isNearLimit;
 
@@ -126,6 +126,7 @@ class CartProvider with ChangeNotifier {
         category: category,
         barcode: barcode.isNotEmpty ? barcode : _randomBarcode(),
         alternative: alternative,
+        quantity: initialQuantity,
       ));
     }
     notifyListeners();
@@ -341,10 +342,19 @@ class CartProvider with ChangeNotifier {
       }
     }
 
-    // 4. Get AI recommendation
+    // 4. Ask user for quantity
+    final qty = await _requestQuantityInput(name, price);
+    if (qty == null) {
+      // User cancelled — abort
+      _isScanning = false;
+      notifyListeners();
+      return;
+    }
+
+    // 5. Get AI recommendation
     final aiAlternative = await AIService.getAlternative(name, price, category);
 
-    addItemWithAI(name, price, aiAlternative, category: category, barcode: barcode);
+    addItemWithAI(name, price, aiAlternative, category: category, barcode: barcode, initialQuantity: qty);
 
     _isScanning = false;
     notifyListeners();
@@ -358,6 +368,75 @@ class CartProvider with ChangeNotifier {
       return product['categories'].toString().split(',').first.trim();
     }
     return 'General';
+  }
+
+  Future<int?> _requestQuantityInput(String name, double price) async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return null;
+
+    final controller = TextEditingController(text: '1');
+
+    return await showDialog<int>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.shopping_cart_rounded, color: Color(0xFF10B981), size: 22),
+            SizedBox(width: 10),
+            Text('Add to Cart', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15), maxLines: 2, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+            Text('₱${price.toStringAsFixed(2)} each', style: const TextStyle(color: Colors.white54, fontSize: 13)),
+            const SizedBox(height: 20),
+            const Text('Quantity', style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                hintText: '1',
+                hintStyle: const TextStyle(color: Colors.white38),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final val = int.tryParse(controller.text.trim());
+              if (val != null && val > 0) {
+                Navigator.pop(ctx, val);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Add to Cart', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<Map<String, dynamic>?> _requestManualInput(String barcode) async {

@@ -175,49 +175,92 @@ class CartItemTile extends StatelessWidget {
   }
 }
 
-class _QuantityControl extends StatelessWidget {
+class _QuantityControl extends StatefulWidget {
   final CartItem item;
   final CartProvider cart;
 
   const _QuantityControl({required this.item, required this.cart});
 
   @override
+  State<_QuantityControl> createState() => _QuantityControlState();
+}
+
+class _QuantityControlState extends State<_QuantityControl> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.item.quantity}');
+  }
+
+  @override
+  void didUpdateWidget(covariant _QuantityControl oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.item.quantity != widget.item.quantity) {
+      _controller.text = '${widget.item.quantity}';
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final val = int.tryParse(_controller.text.trim());
+    if (val == null || val <= 0) {
+      widget.cart.updateQuantity(widget.item.id, 0); // removes item
+    } else {
+      widget.cart.updateQuantity(widget.item.id, val);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _button(
-          icon: item.quantity == 1 ? Icons.delete_rounded : Icons.remove_rounded,
-          color: item.quantity == 1 ? AppColors.danger : AppColors.textSecondary,
-          onTap: () => cart.updateQuantity(item.id, item.quantity - 1),
+        // Delete button
+        GestureDetector(
+          onTap: () => widget.cart.updateQuantity(widget.item.id, 0),
+          child: Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: AppColors.danger.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: const Icon(Icons.delete_rounded, size: 14, color: AppColors.danger),
+          ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
+        // Qty text input
         SizedBox(
-          width: 24,
-          child: Text('${item.quantity}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-        ),
-        const SizedBox(width: 4),
-        _button(
-          icon: Icons.add_rounded,
-          color: AppColors.primary,
-          onTap: () => cart.updateQuantity(item.id, item.quantity + 1),
+          width: 42,
+          height: 28,
+          child: TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.zero,
+              filled: true,
+              fillColor: AppColors.bgCardAlt,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(7),
+                borderSide: BorderSide.none,
+              ),
+              hintText: '0',
+              hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+            ),
+            onSubmitted: (_) => _submit(),
+            onTapOutside: (_) => _submit(),
+          ),
         ),
       ],
-    );
-  }
-
-  Widget _button({required IconData icon, required Color color, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 26,
-        height: 26,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(7),
-        ),
-        child: Icon(icon, size: 14, color: color),
-      ),
     );
   }
 }
