@@ -12,12 +12,7 @@ const productSchema = new mongoose.Schema({
       price: { type: Number },
       date: { type: Date, default: Date.now }
     }
-  ],
-  isPromo: { type: Boolean, default: false },
-  promoLabel: { type: String, default: '' },       // e.g. "Buy 2 Get 1", "10% Off"
-  promoDiscount: { type: Number, default: 0 },     // percentage discount (0-100)
-  promoStore: { type: String, default: '' },        // e.g. "SM Supermarket", "Puregold"
-  promoExpiresAt: { type: Date, default: null }     // promo validity date
+  ]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

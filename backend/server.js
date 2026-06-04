@@ -111,10 +111,6 @@ app.post('/api/products/search-batch', async (req, res) => {
           name: product.name,
           price: product.latestPrice,
           category: product.category,
-          isPromo: product.isPromo,
-          promoLabel: product.promoLabel || '',
-          promoDiscount: product.promoDiscount || 0,
-          promoStore: product.promoStore || '',
         };
       } else {
         results[rawName] = null;
@@ -122,40 +118,6 @@ app.post('/api/products/search-batch', async (req, res) => {
     }
 
     res.status(200).json(results);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Bulk update promo fields (for admin seeding)
-app.patch('/api/products/bulk-promo', async (req, res) => {
-  try {
-    const { promos } = req.body;
-    if (!promos || !Array.isArray(promos)) {
-      return res.status(400).json({ error: 'promos array is required' });
-    }
-    const results = [];
-    for (const promo of promos) {
-      const { barcode, ...fields } = promo;
-      if (!barcode) continue;
-      const updated = await Product.findOneAndUpdate(
-        { barcode },
-        { $set: fields },
-        { new: true }
-      );
-      results.push(updated ? { barcode, status: 'updated', name: updated.name } : { barcode, status: 'not_found' });
-    }
-    res.status(200).json({ results });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get all products that are currently on promo
-app.get('/api/products/promos', async (req, res) => {
-  try {
-    const promos = await Product.find({ isPromo: true }).sort({ name: 1 });
-    res.status(200).json(promos);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -41,13 +41,6 @@ class AIService {
         'quantity': i.quantity,
         if (grounding != null) 'dbPrice': grounding['price'],
         if (grounding != null) 'dbCategory': grounding['category'],
-        if (grounding != null) 'dbIsPromo': grounding['isPromo'],
-        if (grounding != null && (grounding['promoLabel'] as String? ?? '').isNotEmpty)
-          'dbPromoLabel': grounding['promoLabel'],
-        if (grounding != null && (grounding['promoStore'] as String? ?? '').isNotEmpty)
-          'dbPromoStore': grounding['promoStore'],
-        if (grounding != null && (grounding['promoDiscount'] ?? 0) > 0)
-          'dbPromoDiscount': grounding['promoDiscount'],
         if (i.estimatedPrice != null && grounding == null)
           'estimatedPrice': i.estimatedPrice,
       };
@@ -75,13 +68,7 @@ For EACH item in the list, provide a JSON object with:
    - For "Safeguard Soap", suggest "Bioderm Soap" or "Guard Soap".
    Set to null if no realistic cheaper option exists.
 5. "note" (String) — a short reason why the alternative is still a good quality choice (e.g. "Same weight, popular local brand"). Empty string if no alternative.
-6. "coupons" (Array of strings) — list of any real promotions or sales in Philippine supermarkets (e.g. ["Buy 1 Take 1 at SM Supermarket", "On sale at Puregold"]).
-   - CRITICAL: If "dbIsPromo" is true, it means this product currently has a verified promotion in our database.
-     - If "dbPromoLabel" is provided, use it EXACTLY as the first coupon string.
-     - If "dbPromoDiscount" is provided, append "– X% OFF" to the label.
-     - If "dbPromoStore" is provided, append "@ StoreName" to the coupon string.
-     - Example: dbPromoLabel="Buy 2 Get 1 Free", dbPromoDiscount=33, dbPromoStore="7-Eleven" → "Buy 2 Get 1 Free – 33% OFF @ 7-Eleven"
-   - If no active promo is specified by "dbIsPromo", you can still suggest generic known coupons/sales. Empty array if none.
+6. "coupons" (Array of strings) — list of any real promotions or sales in Philippine supermarkets (e.g. ["Buy 1 Take 1 at SM Supermarket", "On sale at Puregold"]). Empty array if none.
 
 Here is an example of the expected output format:
 Input: [{"name": "Nestle Fresh Milk 1L", "quantity": 1}]
