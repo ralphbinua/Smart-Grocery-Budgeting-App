@@ -131,11 +131,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('🏷️  Active Promo', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-                    Switch(
-                      value: isPromo,
-                      activeColor: AppColors.primary,
-                      onChanged: (v) => setDialogState(() => isPromo = v),
-                    ),
+                     Switch(
+                       value: isPromo,
+                       activeThumbColor: AppColors.primary,
+                       onChanged: (v) => setDialogState(() => isPromo = v),
+                     ),
                   ],
                 ),
                 if (isPromo) ...[

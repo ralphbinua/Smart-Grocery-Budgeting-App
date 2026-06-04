@@ -1,21 +1,11 @@
 require('dotenv').config();
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
 
 const PORT = process.env.PORT || 3000;
 
@@ -34,16 +24,7 @@ const Trip = require('./models/Trip');
 
 // Root endpoint
 app.get('/', (req, res) => {
-  res.send('Smart Grocery IoT Backend is running with MongoDB...');
-});
-
-// Endpoint for the IoT device (ESP32) to send scan results via HTTP POST
-app.post('/scan', (req, res) => {
-  const { barcode } = req.body;
-  if (!barcode) return res.status(400).json({ error: 'Barcode is required' });
-  console.log(`[IoT] Scanned barcode received: ${barcode}`);
-  io.emit('new_item_scanned', { barcode });
-  res.status(200).json({ success: true, message: 'Scan broadcasted' });
+  res.send('Smart Grocery Backend is running with MongoDB...');
 });
 
 // Save a trip (Checkout)
@@ -147,7 +128,6 @@ app.post('/api/products/search-batch', async (req, res) => {
 });
 
 // Bulk update promo fields (for admin seeding)
-// Body: { promos: [ { barcode, isPromo, promoLabel, promoDiscount, promoStore, promoExpiresAt }, ... ] }
 app.patch('/api/products/bulk-promo', async (req, res) => {
   try {
     const { promos } = req.body;
@@ -228,15 +208,7 @@ app.delete('/api/products/:barcode', async (req, res) => {
   }
 });
 
-// Socket.io connection handling
-io.on('connection', (socket) => {
-  console.log(`[Socket] A client connected: ${socket.id}`);
-  socket.on('disconnect', () => {
-    console.log(`[Socket] Client disconnected: ${socket.id}`);
-  });
-});
-
-server.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n==========================================`);
   console.log(`  Smart Grocery Backend Server`);
   console.log(`  Running on: http://localhost:${PORT}`);
