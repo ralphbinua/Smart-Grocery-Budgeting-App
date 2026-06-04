@@ -88,6 +88,86 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
+// Helper to escape regex special characters
+function escapeRegex(text) {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
+// Batch search products by names
+app.post('/api/products/search-batch', async (req, res) => {
+  try {
+    const { names } = req.body;
+    if (!names || !Array.isArray(names)) {
+      return res.status(400).json({ error: 'Names array is required' });
+    }
+
+    const results = {};
+    for (const rawName of names) {
+      if (!rawName || typeof rawName !== 'string') continue;
+      const queryName = rawName.trim();
+      if (queryName.length === 0) continue;
+
+      // 1. Try exact/substring match
+      let product = await Product.findOne({ name: { $regex: escapeRegex(queryName), $options: 'i' } });
+
+      // 2. Fallback: split into words and match documents containing ALL words
+      if (!product) {
+        const words = queryName.split(/\s+/).filter(w => w.length > 1 && !/^\d+g$|^\d+ml$|^\d+l$|^\d+kg$/i.test(w));
+        if (words.length > 0) {
+          const andQueries = words.map(w => ({ name: { $regex: escapeRegex(w), $options: 'i' } }));
+          product = await Product.findOne({ $and: andQueries });
+
+          // 3. Fallback: match first 2 words if query is multi-word
+          if (!product && words.length > 1) {
+            const partialQueries = words.slice(0, 2).map(w => ({ name: { $regex: escapeRegex(w), $options: 'i' } }));
+            product = await Product.findOne({ $and: partialQueries });
+          }
+        }
+      }
+
+      if (product) {
+        results[rawName] = {
+          name: product.name,
+          price: product.latestPrice,
+          category: product.category,
+          isPromo: product.isPromo
+        };
+      } else {
+        results[rawName] = null;
+      }
+    }
+
+    res.status(200).json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Bulk update promo fields (for admin seeding)
+// Body: { promos: [ { barcode, isPromo, promoLabel, promoDiscount, promoStore, promoExpiresAt }, ... ] }
+app.patch('/api/products/bulk-promo', async (req, res) => {
+  try {
+    const { promos } = req.body;
+    if (!promos || !Array.isArray(promos)) {
+      return res.status(400).json({ error: 'promos array is required' });
+    }
+    const results = [];
+    for (const promo of promos) {
+      const { barcode, ...fields } = promo;
+      if (!barcode) continue;
+      const updated = await Product.findOneAndUpdate(
+        { barcode },
+        { $set: fields },
+        { new: true }
+      );
+      results.push(updated ? { barcode, status: 'updated', name: updated.name } : { barcode, status: 'not_found' });
+    }
+    res.status(200).json({ results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get Product by Barcode
 app.get('/api/products/:barcode', async (req, res) => {
   try {
