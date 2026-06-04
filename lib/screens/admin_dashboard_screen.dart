@@ -77,18 +77,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
       if (response.statusCode == 200 || response.statusCode == 204) {
         _fetchProducts();
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Product deleted successfully')),
           );
+        }
       } else {
         throw Exception('Failed to delete');
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -212,20 +214,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
                 if (response.statusCode == 200 || response.statusCode == 201) {
                   _fetchProducts();
-                  if (mounted)
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Product saved successfully'),
                       ),
                     );
+                  }
                 } else {
                   throw Exception('Failed to save product');
                 }
               } catch (e) {
-                if (mounted)
+                if (mounted) {
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
               }
             },
             child: const Text('Save'),
