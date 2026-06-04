@@ -28,7 +28,8 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
     super.initState();
     _nameController = TextEditingController(text: widget.item.name);
     _priceController = TextEditingController(
-        text: widget.item.estimatedPrice?.toStringAsFixed(2) ?? '');
+      text: widget.item.estimatedPrice?.toStringAsFixed(2) ?? '',
+    );
   }
 
   @override
@@ -39,8 +40,9 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
   }
 
   void _saveEdit() {
-    final name =
-        _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null;
+    final name = _nameController.text.trim().isNotEmpty
+        ? _nameController.text.trim()
+        : null;
     final price = double.tryParse(_priceController.text.trim());
     widget.onUpdate(name, null, price);
     setState(() => _isEditing = false);
@@ -66,8 +68,7 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
 
   Widget _buildViewMode() {
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       leading: Container(
         width: 36,
         height: 36,
@@ -75,31 +76,38 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
           color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.shopping_basket_outlined,
-            size: 18, color: AppColors.primary),
+        child: const Icon(
+          Icons.shopping_basket_outlined,
+          size: 18,
+          color: AppColors.primary,
+        ),
       ),
       title: Text(
         widget.item.name,
         style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.w600),
+          color: AppColors.textPrimary,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       subtitle: Row(
         children: [
           Text(
             'Qty: ${widget.item.quantity}',
-            style: const TextStyle(
-                color: AppColors.textMuted, fontSize: 11),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
           ),
           if (widget.item.estimatedPrice != null) ...[
-            const Text(' · ',
-                style:
-                    TextStyle(color: AppColors.textMuted, fontSize: 11)),
+            const Text(
+              ' · ',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+            ),
             Text(
               '₱${widget.item.estimatedPrice!.toStringAsFixed(2)}',
               style: const TextStyle(
-                  color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600),
+                color: AppColors.primary,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ],
@@ -123,15 +131,15 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
             child: Text(
               '${widget.item.quantity}',
               style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700),
+                color: AppColors.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           _qtyButton(
             icon: Icons.add,
-            onTap: () =>
-                widget.onUpdate(null, widget.item.quantity + 1, null),
+            onTap: () => widget.onUpdate(null, widget.item.quantity + 1, null),
           ),
           const SizedBox(width: 8),
           GestureDetector(
@@ -142,8 +150,11 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
                 color: AppColors.bgCardAlt,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.edit_rounded,
-                  size: 14, color: AppColors.textSecondary),
+              child: const Icon(
+                Icons.edit_rounded,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           const SizedBox(width: 6),
@@ -155,8 +166,11 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
                 color: AppColors.danger.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.close_rounded,
-                  size: 14, color: AppColors.danger),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 14,
+                color: AppColors.danger,
+              ),
             ),
           ),
         ],
@@ -171,12 +185,13 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
         children: [
           TextField(
             controller: _nameController,
-            style: const TextStyle(
-                color: AppColors.textPrimary, fontSize: 14),
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
             decoration: const InputDecoration(
               labelText: 'Item name',
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -186,14 +201,19 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
                 child: TextField(
                   controller: _priceController,
                   keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true),
+                    decimal: true,
+                  ),
                   style: const TextStyle(
-                      color: AppColors.textPrimary, fontSize: 14),
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Estimated price (₱)',
                     prefixText: '₱ ',
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               ),
@@ -202,18 +222,22 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
                 onPressed: _saveEdit,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 child: const Text('Save'),
               ),
               const SizedBox(width: 6),
               TextButton(
                 onPressed: () => setState(() => _isEditing = false),
-                child: const Text('Cancel',
-                    style: TextStyle(
-                        color: AppColors.textMuted, fontSize: 12)),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                ),
               ),
             ],
           ),

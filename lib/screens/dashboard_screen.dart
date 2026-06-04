@@ -30,8 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulseAnimation =
-        Tween<double>(begin: 0.95, end: 1.0).animate(
+    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -86,39 +85,54 @@ class _DashboardScreenState extends State<DashboardScreen>
           if (cart.groceryList.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 child: Row(
                   children: [
-                    const Text('My Grocery List',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary)),
+                    const Text(
+                      'My Grocery List',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.info.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text('${cart.groceryList.length}',
-                          style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.info,
-                              fontWeight: FontWeight.w700)),
+                      child: Text(
+                        '${cart.groceryList.length}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.info,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                     const Spacer(),
                     TextButton(
                       onPressed: () => _showClearListConfirm(context, cart),
                       style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                      child: const Text('Clear all',
-                          style: TextStyle(
-                              fontSize: 12, color: AppColors.textMuted)),
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Clear all',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -133,10 +147,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                     onRemove: () =>
                         cart.removeGroceryItem(cart.groceryList[index].id),
                     onUpdate: (name, qty, price) => cart.updateGroceryItem(
-                        cart.groceryList[index].id,
-                        name: name,
-                        quantity: qty,
-                        estimatedPrice: price),
+                      cart.groceryList[index].id,
+                      name: name,
+                      quantity: qty,
+                      estimatedPrice: price,
+                    ),
                   ),
                 ),
                 childCount: cart.groceryList.length,
@@ -149,29 +164,39 @@ class _DashboardScreenState extends State<DashboardScreen>
           if (cart.hasAnalyzedItems) ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 child: Row(
                   children: [
-                    const Text('Analyzed Items',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary)),
+                    const Text(
+                      'Analyzed Items',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     if (cart.items.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text('${cart.items.length}',
-                            style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700)),
+                        child: Text(
+                          '${cart.items.length}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     const SizedBox(width: 8),
                     if (cart.items.isNotEmpty)
@@ -183,11 +208,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: cart.spendingByCategory.keys
                                 .take(3)
-                                .map((cat) => Padding(
-                                      padding:
-                                          const EdgeInsets.only(left: 6),
-                                      child: CategoryChip(label: cat),
-                                    ))
+                                .map(
+                                  (cat) => Padding(
+                                    padding: const EdgeInsets.only(left: 6),
+                                    child: CategoryChip(label: cat),
+                                  ),
+                                )
                                 .toList(),
                           ),
                         ),
@@ -195,8 +221,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                     if (cart.items.isNotEmpty)
                       IconButton(
                         onPressed: () => _showCheckoutConfirm(context),
-                        icon: const Icon(Icons.receipt_long_rounded,
-                            color: AppColors.primary, size: 20),
+                        icon: const Icon(
+                          Icons.receipt_long_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                         tooltip: 'Checkout',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -245,28 +274,35 @@ class _DashboardScreenState extends State<DashboardScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              gradient:
-                  const LinearGradient(colors: AppColors.primaryGradient),
+              gradient: const LinearGradient(colors: AppColors.primaryGradient),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.shopping_cart_rounded,
-                size: 20, color: Colors.black),
+            child: const Icon(
+              Icons.shopping_cart_rounded,
+              size: 20,
+              color: Colors.black,
+            ),
           ),
           const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('SmartCart',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary)),
+              const Text(
+                'SmartCart',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               Text(
                 cart.hasAnalyzedItems
                     ? '${cart.totalItems} items · ₱${cart.totalSpent.toStringAsFixed(0)} spent'
                     : '${cart.groceryList.length} item${cart.groceryList.length == 1 ? '' : 's'} in list',
                 style: const TextStyle(
-                    fontSize: 11, color: AppColors.textSecondary),
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -282,8 +318,11 @@ class _DashboardScreenState extends State<DashboardScreen>
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFF1E293B)),
             ),
-            child: const Icon(Icons.tune_rounded,
-                size: 18, color: AppColors.primary),
+            child: const Icon(
+              Icons.tune_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
           ),
           tooltip: 'Set Budget',
         ),
@@ -301,8 +340,8 @@ class _DashboardScreenState extends State<DashboardScreen>
           colors: cart.isOverBudget
               ? [const Color(0xFF2D1515), const Color(0xFF1A0A0A)]
               : cart.isNearLimit
-                  ? [const Color(0xFF2D2500), const Color(0xFF1A1600)]
-                  : [const Color(0xFF0D2419), const Color(0xFF091A11)],
+              ? [const Color(0xFF2D2500), const Color(0xFF1A1600)]
+              : [const Color(0xFF0D2419), const Color(0xFF091A11)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -311,8 +350,8 @@ class _DashboardScreenState extends State<DashboardScreen>
           color: cart.isOverBudget
               ? AppColors.danger.withValues(alpha: 0.4)
               : cart.isNearLimit
-                  ? AppColors.warning.withValues(alpha: 0.4)
-                  : AppColors.primary.withValues(alpha: 0.3),
+              ? AppColors.warning.withValues(alpha: 0.4)
+              : AppColors.primary.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -328,14 +367,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                       cart.isOverBudget
                           ? Icons.warning_rounded
                           : cart.isNearLimit
-                              ? Icons.notifications_active_rounded
-                              : Icons.account_balance_wallet_rounded,
+                          ? Icons.notifications_active_rounded
+                          : Icons.account_balance_wallet_rounded,
                       size: 16,
                       color: cart.isOverBudget
                           ? AppColors.danger
                           : cart.isNearLimit
-                              ? AppColors.warning
-                              : AppColors.primary,
+                          ? AppColors.warning
+                          : AppColors.primary,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
@@ -343,8 +382,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         cart.isOverBudget
                             ? 'OVER BUDGET'
                             : cart.isNearLimit
-                                ? 'NEAR LIMIT'
-                                : 'REMAINING BALANCE',
+                            ? 'NEAR LIMIT'
+                            : 'REMAINING BALANCE',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -352,8 +391,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                           color: cart.isOverBudget
                               ? AppColors.danger
                               : cart.isNearLimit
-                                  ? AppColors.warning
-                                  : AppColors.primary,
+                              ? AppColors.warning
+                              : AppColors.primary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -373,8 +412,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                       color: cart.isOverBudget
                           ? AppColors.danger
                           : cart.isNearLimit
-                              ? AppColors.warning
-                              : AppColors.textPrimary,
+                          ? AppColors.warning
+                          : AppColors.textPrimary,
                       letterSpacing: -1,
                     ),
                   ),
@@ -394,8 +433,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         cart.isOverBudget
                             ? AppColors.danger
                             : cart.isNearLimit
-                                ? AppColors.warning
-                                : AppColors.primary,
+                            ? AppColors.warning
+                            : AppColors.primary,
                       ),
                     ),
                   ),
@@ -420,20 +459,29 @@ class _DashboardScreenState extends State<DashboardScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                        child: _infoChip('Limit',
-                            '₱${cart.budgetLimit.toStringAsFixed(0)}',
-                            AppColors.textSecondary,
-                            CrossAxisAlignment.start)),
+                      child: _infoChip(
+                        'Limit',
+                        '₱${cart.budgetLimit.toStringAsFixed(0)}',
+                        AppColors.textSecondary,
+                        CrossAxisAlignment.start,
+                      ),
+                    ),
                     Expanded(
-                        child: _infoChip('Spent',
-                            '₱${cart.totalSpent.toStringAsFixed(2)}',
-                            AppColors.info,
-                            CrossAxisAlignment.center)),
+                      child: _infoChip(
+                        'Spent',
+                        '₱${cart.totalSpent.toStringAsFixed(2)}',
+                        AppColors.info,
+                        CrossAxisAlignment.center,
+                      ),
+                    ),
                     Expanded(
-                        child: _infoChip('Saved',
-                            '₱${cart.totalSavedByAI.toStringAsFixed(2)}',
-                            AppColors.success,
-                            CrossAxisAlignment.end)),
+                      child: _infoChip(
+                        'Saved',
+                        '₱${cart.totalSavedByAI.toStringAsFixed(2)}',
+                        AppColors.success,
+                        CrossAxisAlignment.end,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -466,20 +514,32 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _infoChip(
-      String label, String value, Color color, CrossAxisAlignment alignment) {
+    String label,
+    String value,
+    Color color,
+    CrossAxisAlignment alignment,
+  ) {
     return Column(
       crossAxisAlignment: alignment,
       children: [
-        Text(label,
-            style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.w500)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(value,
-              style: TextStyle(
-                  fontSize: 13, color: color, fontWeight: FontWeight.w700)),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ],
     );
@@ -490,25 +550,31 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Row(
       children: [
         Expanded(
-            child: StatCard(
-                icon: Icons.shopping_bag_rounded,
-                label: 'Items',
-                value: '${cart.totalItems}',
-                color: AppColors.info)),
+          child: StatCard(
+            icon: Icons.shopping_bag_rounded,
+            label: 'Items',
+            value: '${cart.totalItems}',
+            color: AppColors.info,
+          ),
+        ),
         const SizedBox(width: 10),
         Expanded(
-            child: StatCard(
-                icon: Icons.savings_rounded,
-                label: 'AI Saved',
-                value: '₱${cart.totalSavedByAI.toStringAsFixed(0)}',
-                color: AppColors.success)),
+          child: StatCard(
+            icon: Icons.savings_rounded,
+            label: 'AI Saved',
+            value: '₱${cart.totalSavedByAI.toStringAsFixed(0)}',
+            color: AppColors.success,
+          ),
+        ),
         const SizedBox(width: 10),
         Expanded(
-            child: StatCard(
-                icon: Icons.local_offer_rounded,
-                label: 'Deals',
-                value: '${cart.couponCount}',
-                color: AppColors.warning)),
+          child: StatCard(
+            icon: Icons.local_offer_rounded,
+            label: 'Deals',
+            value: '${cart.couponCount}',
+            color: AppColors.warning,
+          ),
+        ),
       ],
     );
   }
@@ -534,15 +600,24 @@ class _DashboardScreenState extends State<DashboardScreen>
                   controller: _itemController,
                   focusNode: _itemFocus,
                   style: const TextStyle(
-                      color: AppColors.textPrimary, fontSize: 14),
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Item name (e.g. Nestle Milk)',
                     hintStyle: const TextStyle(
-                        color: AppColors.textMuted, fontSize: 13),
-                    prefixIcon: const Icon(Icons.shopping_basket_outlined,
-                        size: 16, color: AppColors.textMuted),
+                      color: AppColors.textMuted,
+                      fontSize: 13,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.shopping_basket_outlined,
+                      size: 16,
+                      color: AppColors.textMuted,
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 11),
+                      horizontal: 12,
+                      vertical: 11,
+                    ),
                     filled: true,
                     fillColor: AppColors.bgCardAlt,
                     border: OutlineInputBorder(
@@ -560,15 +635,22 @@ class _DashboardScreenState extends State<DashboardScreen>
                 child: TextField(
                   controller: _priceController,
                   style: const TextStyle(
-                      color: AppColors.textPrimary, fontSize: 14),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     hintText: '₱ Price',
                     hintStyle: const TextStyle(
-                        color: AppColors.textMuted, fontSize: 12),
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 11),
+                      horizontal: 12,
+                      vertical: 11,
+                    ),
                     filled: true,
                     fillColor: AppColors.bgCardAlt,
                     border: OutlineInputBorder(
@@ -587,11 +669,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                   height: 42,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: AppColors.primaryGradient),
+                      colors: AppColors.primaryGradient,
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.add_rounded,
-                      color: Colors.black, size: 20),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: Colors.black,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -602,31 +688,47 @@ class _DashboardScreenState extends State<DashboardScreen>
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                const Icon(Icons.bolt_rounded,
-                    size: 12, color: AppColors.textMuted),
+                const Icon(
+                  Icons.bolt_rounded,
+                  size: 12,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(width: 4),
                 ...[
-                  'Rice 5kg', 'Eggs (12)', 'Cooking Oil',
-                  'Chicken', 'Milk', 'Bread', 'Shampoo', 'Detergent',
-                ].map((item) => Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: GestureDetector(
-                        onTap: () => cart.addGroceryItem(item),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.bgCardAlt,
-                            borderRadius: BorderRadius.circular(20),
+                  'Rice 5kg',
+                  'Eggs (12)',
+                  'Cooking Oil',
+                  'Chicken',
+                  'Milk',
+                  'Bread',
+                  'Shampoo',
+                  'Detergent',
+                ].map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: GestureDetector(
+                      onTap: () => cart.addGroceryItem(item),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgCardAlt,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          item,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
                           ),
-                          child: Text(item,
-                              style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textSecondary,
-                                  fontWeight: FontWeight.w500)),
                         ),
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -719,10 +821,10 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildFeatureChips() {
     final features = [
-      (Icons.swap_horiz_rounded,   AppColors.success, 'Cheaper Alternatives'),
-      (Icons.verified_rounded,     AppColors.info,    'Quality Verified'),
-      (Icons.local_offer_rounded,  AppColors.warning, 'Coupons & Deals'),
-      (Icons.calculate_rounded,    AppColors.primary, 'Live Budget'),
+      (Icons.swap_horiz_rounded, AppColors.success, 'Cheaper Alternatives'),
+      (Icons.verified_rounded, AppColors.info, 'Quality Verified'),
+      (Icons.local_offer_rounded, AppColors.warning, 'Coupons & Deals'),
+      (Icons.calculate_rounded, AppColors.primary, 'Live Budget'),
     ];
 
     return Wrap(
@@ -757,7 +859,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-
   // ─── FAB ─────────────────────────────────────────────────────────────────────
   Widget _buildFAB(CartProvider cart) {
     if (cart.isAnalyzing) {
@@ -767,30 +868,36 @@ class _DashboardScreenState extends State<DashboardScreen>
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-                colors: AppColors.purpleGradient),
+            gradient: const LinearGradient(colors: AppColors.purpleGradient),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                  color: AppColors.accent.withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8)),
+                color: AppColors.accent.withValues(alpha: 0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
             ],
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2.5)),
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              ),
               SizedBox(width: 10),
-              Text('Analyzing...',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14)),
+              Text(
+                'Analyzing...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ),
@@ -805,28 +912,30 @@ class _DashboardScreenState extends State<DashboardScreen>
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       label: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          gradient:
-              const LinearGradient(colors: AppColors.primaryGradient),
+          gradient: const LinearGradient(colors: AppColors.primaryGradient),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8))
+              color: AppColors.primary.withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
         child: const Row(
           children: [
             Icon(Icons.auto_awesome, color: Colors.black, size: 20),
             SizedBox(width: 8),
-            Text('Analyze List',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14)),
+            Text(
+              'Analyze List',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+            ),
           ],
         ),
       ),
@@ -840,42 +949,51 @@ class _DashboardScreenState extends State<DashboardScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.account_balance_wallet_rounded,
-                color: AppColors.primary, size: 22),
+            Icon(
+              Icons.account_balance_wallet_rounded,
+              color: AppColors.primary,
+              size: 22,
+            ),
             SizedBox(width: 10),
-            Text('Set Budget',
-                style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700)),
+            Text(
+              'Set Budget',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter your shopping budget for this trip.',
-                style: TextStyle(
-                    color: AppColors.textSecondary, fontSize: 13)),
+            const Text(
+              'Enter your shopping budget for this trip.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               autofocus: true,
               style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700),
+                color: AppColors.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
               decoration: const InputDecoration(
                 hintText: '0.00',
                 prefixText: '₱ ',
                 prefixStyle: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 22),
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                ),
               ),
             ),
           ],
@@ -883,20 +1001,25 @@ class _DashboardScreenState extends State<DashboardScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               final budget = double.tryParse(controller.text) ?? 0;
               if (budget > 0) {
-                Provider.of<CartProvider>(context, listen: false)
-                    .setBudget(budget);
+                Provider.of<CartProvider>(
+                  context,
+                  listen: false,
+                ).setBudget(budget);
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content:
-                        Text('Budget set to ₱${budget.toStringAsFixed(2)}'),
+                    content: Text(
+                      'Budget set to ₱${budget.toStringAsFixed(2)}',
+                    ),
                     backgroundColor: AppColors.bgCardAlt,
                   ),
                 );
@@ -914,19 +1037,25 @@ class _DashboardScreenState extends State<DashboardScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Clear Grocery List',
-            style: TextStyle(
-                color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Clear Grocery List',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         content: const Text(
-            'This will remove all items from your grocery list.',
-            style: TextStyle(color: AppColors.textSecondary)),
+          'This will remove all items from your grocery list.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -934,8 +1063,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.danger,
-                foregroundColor: Colors.white),
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Clear All'),
           ),
         ],
@@ -948,27 +1078,35 @@ class _DashboardScreenState extends State<DashboardScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.receipt_long_rounded,
-                color: AppColors.primary, size: 22),
+            Icon(
+              Icons.receipt_long_rounded,
+              color: AppColors.primary,
+              size: 22,
+            ),
             SizedBox(width: 10),
-            Text('Checkout & Save',
-                style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700)),
+            Text(
+              'Checkout & Save',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         content: const Text(
-            'This will save your current cart to purchase history and start a new session. Continue?',
-            style: TextStyle(color: AppColors.textSecondary)),
+          'This will save your current cart to purchase history and start a new session. Continue?',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -976,7 +1114,8 @@ class _DashboardScreenState extends State<DashboardScreen>
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                    content: Text('Cart saved to purchase history!')),
+                  content: Text('Cart saved to purchase history!'),
+                ),
               );
             },
             child: const Text('Checkout'),

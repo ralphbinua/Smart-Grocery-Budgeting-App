@@ -12,12 +12,14 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppColors.bgCard,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.bgCard,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
   runApp(
     ChangeNotifierProvider(
       create: (_) => CartProvider(),
@@ -88,19 +90,25 @@ class _RootNavigationState extends State<_RootNavigation> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: AppColors.primaryGradient),
+                gradient: const LinearGradient(
+                  colors: AppColors.primaryGradient,
+                ),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.shopping_cart_rounded,
-                  color: Colors.black, size: 32),
+              child: const Icon(
+                Icons.shopping_cart_rounded,
+                color: Colors.black,
+                size: 32,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               'Welcome to SmartCart!',
               style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary),
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -112,21 +120,24 @@ class _RootNavigationState extends State<_RootNavigation> {
             const SizedBox(height: 24),
             TextField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               autofocus: true,
               style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800),
+                color: AppColors.textPrimary,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+              ),
               textAlign: TextAlign.center,
               decoration: const InputDecoration(
                 hintText: '0.00',
                 prefixText: '₱ ',
                 prefixStyle: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 28),
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 28,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -136,13 +147,16 @@ class _RootNavigationState extends State<_RootNavigation> {
                 onPressed: () {
                   final budget = double.tryParse(controller.text) ?? 0;
                   if (budget > 0) {
-                    Provider.of<CartProvider>(context, listen: false)
-                        .setBudget(budget);
+                    Provider.of<CartProvider>(
+                      context,
+                      listen: false,
+                    ).setBudget(budget);
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            'Budget set to ₱${budget.toStringAsFixed(2)} — start adding items!'),
+                          'Budget set to ₱${budget.toStringAsFixed(2)} — start adding items!',
+                        ),
                         backgroundColor: AppColors.bgCardAlt,
                       ),
                     );
@@ -151,18 +165,22 @@ class _RootNavigationState extends State<_RootNavigation> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: const Text('Set Budget & Start Shopping',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                child: const Text(
+                  'Set Budget & Start Shopping',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                ),
               ),
             ),
             const SizedBox(height: 10),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Skip for now',
-                  style:
-                      TextStyle(color: AppColors.textMuted, fontSize: 13)),
+              child: const Text(
+                'Skip for now',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
             ),
           ],
         ),
@@ -176,10 +194,7 @@ class _RootNavigationState extends State<_RootNavigation> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: _buildBottomNav(cart),
     );
   }
@@ -212,10 +227,18 @@ class _RootNavigationState extends State<_RootNavigation> {
                     ? '${cart.alternativeCount + cart.couponCount}'
                     : null,
               ),
-              _navItem(2, Icons.history_rounded, Icons.history_rounded,
-                  'History'),
-              _navItem(3, Icons.settings_rounded, Icons.settings_outlined,
-                  'Settings'),
+              _navItem(
+                2,
+                Icons.history_rounded,
+                Icons.history_rounded,
+                'History',
+              ),
+              _navItem(
+                3,
+                Icons.settings_rounded,
+                Icons.settings_outlined,
+                'Settings',
+              ),
             ],
           ),
         ),
@@ -269,17 +292,23 @@ class _RootNavigationState extends State<_RootNavigation> {
                       top: -6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 2),
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                              colors: AppColors.primaryGradient),
+                            colors: AppColors.primaryGradient,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(badge,
-                            style: const TextStyle(
-                                fontSize: 9,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w800)),
+                        child: Text(
+                          badge,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -289,8 +318,7 @@ class _RootNavigationState extends State<_RootNavigation> {
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight:
-                      isSelected ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                   color: color,
                 ),
               ),

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +12,8 @@ import '../services/openai_service.dart';
 import '../theme/app_theme.dart';
 
 class CartProvider with ChangeNotifier {
-  static const String _baseUrl = 'https://smart-grocery-budgeting-app.onrender.com';
+  static const String _baseUrl =
+      'https://smart-grocery-budgeting-app.onrender.com';
   double _budgetLimit = 0.0;
 
   // ─── Grocery Input List (user's raw typed list, pre-analysis) ───────────────
@@ -51,11 +51,9 @@ class CartProvider with ChangeNotifier {
   bool get hasGroceryItems => _groceryList.isNotEmpty;
   bool get hasAnalyzedItems => _items.isNotEmpty;
 
-  int get couponCount =>
-      _items.where((i) => i.coupons.isNotEmpty).length;
+  int get couponCount => _items.where((i) => i.coupons.isNotEmpty).length;
 
-  int get alternativeCount =>
-      _items.where((i) => i.alternative != null).length;
+  int get alternativeCount => _items.where((i) => i.alternative != null).length;
 
   double get totalSavedByAI {
     double saved = 0;
@@ -96,15 +94,18 @@ class CartProvider with ChangeNotifier {
     if (name.trim().isEmpty) return;
     // Check for duplicates (case-insensitive)
     final exists = _groceryList.any(
-        (i) => i.name.toLowerCase() == name.trim().toLowerCase());
+      (i) => i.name.toLowerCase() == name.trim().toLowerCase(),
+    );
     if (exists) return;
 
-    _groceryList.add(GroceryInputItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name.trim(),
-      quantity: quantity,
-      estimatedPrice: estimatedPrice,
-    ));
+    _groceryList.add(
+      GroceryInputItem(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: name.trim(),
+        quantity: quantity,
+        estimatedPrice: estimatedPrice,
+      ),
+    );
     notifyListeners();
   }
 
@@ -113,8 +114,12 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateGroceryItem(String id,
-      {String? name, int? quantity, double? estimatedPrice}) {
+  void updateGroceryItem(
+    String id, {
+    String? name,
+    int? quantity,
+    double? estimatedPrice,
+  }) {
     final idx = _groceryList.indexWhere((i) => i.id == id);
     if (idx < 0) return;
     final item = _groceryList[idx];
@@ -150,15 +155,22 @@ class CartProvider with ChangeNotifier {
         dbGroundingData = {};
         rawMap.forEach((key, value) {
           if (value != null) {
-            dbGroundingData![key.toLowerCase().trim()] = Map<String, dynamic>.from(value);
+            dbGroundingData![key.toLowerCase().trim()] =
+                Map<String, dynamic>.from(value);
           }
         });
-        debugPrint('[Grounding] Successfully matched ${dbGroundingData.length} items from database.');
+        debugPrint(
+          '[Grounding] Successfully matched ${dbGroundingData.length} items from database.',
+        );
       } else {
-        debugPrint('[Grounding] Failed to load grounding data: ${response.statusCode}');
+        debugPrint(
+          '[Grounding] Failed to load grounding data: ${response.statusCode}',
+        );
       }
     } catch (e) {
-      debugPrint('[Grounding] Network/DB search error, proceeding with AI-only: $e');
+      debugPrint(
+        '[Grounding] Network/DB search error, proceeding with AI-only: $e',
+      );
     }
 
     try {
@@ -180,9 +192,8 @@ class CartProvider with ChangeNotifier {
             r['alternative'] as Map<String, dynamic>?;
         final String note = r['note'] as String? ?? '';
         final List<String> coupons = List<String>.from(
-            (r['coupons'] as List?)?.cast<String>() ?? []);
-
-
+          (r['coupons'] as List?)?.cast<String>() ?? [],
+        );
 
         _items.add(
           CartItem(
@@ -239,8 +250,9 @@ class CartProvider with ChangeNotifier {
         price: altPrice,
         category: original.category,
         alternative: null,
-        savedAmount:
-            (original.price - altPrice > 0) ? (original.price - altPrice) : 0.0,
+        savedAmount: (original.price - altPrice > 0)
+            ? (original.price - altPrice)
+            : 0.0,
         note: null,
         coupons: original.coupons,
         quantity: original.quantity,
@@ -264,13 +276,13 @@ class CartProvider with ChangeNotifier {
         .toList();
     final storeName = storeNames.isNotEmpty
         ? storeNames
-            .fold<Map<String, int>>({}, (map, s) {
-              map[s] = (map[s] ?? 0) + 1;
-              return map;
-            })
-            .entries
-            .reduce((a, b) => a.value >= b.value ? a : b)
-            .key
+              .fold<Map<String, int>>({}, (map, s) {
+                map[s] = (map[s] ?? 0) + 1;
+                return map;
+              })
+              .entries
+              .reduce((a, b) => a.value >= b.value ? a : b)
+              .key
         : 'Grocery Store';
 
     final newHistoryItem = PurchaseHistory(
@@ -278,12 +290,14 @@ class CartProvider with ChangeNotifier {
       date: '${_monthName(now.month)} ${now.day}, ${now.year}',
       storeName: storeName,
       items: _items
-          .map((i) => HistoryItem(
-                name: i.name,
-                price: i.price,
-                quantity: i.quantity,
-                category: i.category,
-              ))
+          .map(
+            (i) => HistoryItem(
+              name: i.name,
+              price: i.price,
+              quantity: i.quantity,
+              category: i.category,
+            ),
+          )
           .toList(),
       totalSpent: totalSpent,
       budgetLimit: _budgetLimit,
@@ -294,8 +308,7 @@ class CartProvider with ChangeNotifier {
 
     // Save to MongoDB Cloud Database via Node.js backend
     try {
-      final url =
-          Uri.parse('$_baseUrl/api/trips');
+      final url = Uri.parse('$_baseUrl/api/trips');
       await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -303,13 +316,15 @@ class CartProvider with ChangeNotifier {
           'totalSpent': totalSpent,
           'totalSaved': totalSavedByAI,
           'items': _items
-              .map((i) => {
-                    'name': i.name,
-                    'price': i.price,
-                    'quantity': i.quantity,
-                    'isAiSwapped': i.savedAmount > 0,
-                  })
-              .toList()
+              .map(
+                (i) => {
+                  'name': i.name,
+                  'price': i.price,
+                  'quantity': i.quantity,
+                  'isAiSwapped': i.savedAmount > 0,
+                },
+              )
+              .toList(),
         }),
       );
       debugPrint('[MongoDB] Checkout Trip successfully saved to Cloud!');
@@ -352,8 +367,7 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  void _showThresholdSnackbar(
-      String title, String subtitle, Color color) {
+  void _showThresholdSnackbar(String title, String subtitle, Color color) {
     final context = navigatorKey.currentContext;
     if (context == null) return;
 
@@ -362,26 +376,36 @@ class CartProvider with ChangeNotifier {
         SnackBar(
           backgroundColor: color,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           content: Row(
             children: [
-              const Icon(Icons.notifications_active_rounded,
-                  color: Colors.white),
+              const Icon(
+                Icons.notifications_active_rounded,
+                color: Colors.white,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 13)),
-                    Text(subtitle,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 11)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -402,8 +426,9 @@ class CartProvider with ChangeNotifier {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: const Color(0xFF1E293B),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -424,16 +449,16 @@ class CartProvider with ChangeNotifier {
               const Text(
                 'Budget Limit Reached!',
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               Text(
                 'Your cart is over budget by ₱${(totalSpent - budgetLimit).toStringAsFixed(2)}. Consider swapping to cheaper alternatives.',
-                style:
-                    const TextStyle(color: Colors.white70, fontSize: 14),
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -445,13 +470,17 @@ class CartProvider with ChangeNotifier {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFF334155)),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text('Got it',
-                          style: TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Got it',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -464,13 +493,17 @@ class CartProvider with ChangeNotifier {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFEF4444),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text('Adjust Budget',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Adjust Budget',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -484,48 +517,64 @@ class CartProvider with ChangeNotifier {
 
   void _showBudgetDialogFromAlert(BuildContext context) {
     final controller = TextEditingController(
-        text: budgetLimit > 0 ? budgetLimit.toStringAsFixed(0) : '');
+      text: budgetLimit > 0 ? budgetLimit.toStringAsFixed(0) : '',
+    );
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.account_balance_wallet_rounded,
-                color: Color(0xFF10B981), size: 22),
+            Icon(
+              Icons.account_balance_wallet_rounded,
+              color: Color(0xFF10B981),
+              size: 22,
+            ),
             SizedBox(width: 10),
-            Text('Adjust Budget',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(
+              'Adjust Budget',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Set a new shopping budget for this trip.',
-                style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const Text(
+              'Set a new shopping budget for this trip.',
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               autofocus: true,
               style: const TextStyle(
-                  color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
               decoration: const InputDecoration(
                 hintText: '0.00',
                 prefixText: '₱ ',
                 prefixStyle: TextStyle(
-                    color: Color(0xFF10B981),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22),
+                  color: Color(0xFF10B981),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
                 enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white30)),
+                  borderSide: BorderSide(color: Colors.white30),
+                ),
                 focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF10B981))),
+                  borderSide: BorderSide(color: Color(0xFF10B981)),
+                ),
               ),
             ),
           ],
@@ -533,8 +582,10 @@ class CartProvider with ChangeNotifier {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -548,10 +599,13 @@ class CartProvider with ChangeNotifier {
               backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Save Budget',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Save Budget',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -561,10 +615,19 @@ class CartProvider with ChangeNotifier {
   // ─── Helpers ──────────────────────────────────────────────────────────────────
   String _monthName(int m) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[m - 1];
   }
-
 }

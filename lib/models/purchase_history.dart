@@ -17,7 +17,8 @@ class PurchaseHistory {
     this.storeName = 'Grocery Store',
   });
 
-  double get budgetUsedPercent => budgetLimit > 0 ? (totalSpent / budgetLimit) * 100 : 0;
+  double get budgetUsedPercent =>
+      budgetLimit > 0 ? (totalSpent / budgetLimit) * 100 : 0;
 }
 
 class HistoryItem {

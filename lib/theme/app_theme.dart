@@ -26,9 +26,18 @@ class AppColors {
   static const Color info = Color(0xFF3B82F6);
 
   // Gradient stops
-  static const List<Color> primaryGradient = [Color(0xFF00C896), Color(0xFF0EA5E9)];
-  static const List<Color> purpleGradient = [Color(0xFF7C3AED), Color(0xFFDB2777)];
-  static const List<Color> darkGradient = [Color(0xFF0A0F1E), Color(0xFF111827)];
+  static const List<Color> primaryGradient = [
+    Color(0xFF00C896),
+    Color(0xFF0EA5E9),
+  ];
+  static const List<Color> purpleGradient = [
+    Color(0xFF7C3AED),
+    Color(0xFFDB2777),
+  ];
+  static const List<Color> darkGradient = [
+    Color(0xFF0A0F1E),
+    Color(0xFF111827),
+  ];
 }
 
 class AppTheme {
@@ -48,13 +57,34 @@ class AppTheme {
       ),
       fontFamily: 'Inter',
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -0.5),
-        displayMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+        displayLarge: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimary,
+          letterSpacing: -0.5,
+        ),
+        displayMedium: TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
         bodyLarge: TextStyle(fontSize: 15, color: AppColors.textPrimary),
         bodyMedium: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+        labelLarge: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.bg,
@@ -72,7 +102,10 @@ class AppTheme {
         backgroundColor: AppColors.bgCard,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
-        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        selectedLabelStyle: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: TextStyle(fontSize: 11),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
@@ -91,8 +124,14 @@ class AppTheme {
           foregroundColor: Colors.black,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Inter'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Inter',
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -112,23 +151,36 @@ class AppTheme {
         ),
         labelStyle: const TextStyle(color: AppColors.textSecondary),
         hintStyle: const TextStyle(color: AppColors.textMuted),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
-      dividerTheme: const DividerThemeData(color: Color(0xFF1E293B), thickness: 1, space: 0),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF1E293B),
+        thickness: 1,
+        space: 0,
+      ),
       listTileTheme: const ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         tileColor: Colors.transparent,
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.bgCardAlt,
-        labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        labelStyle: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+        ),
         side: const BorderSide(color: Color(0xFF1E293B)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.bgCardAlt,
-        contentTextStyle: const TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter'),
+        contentTextStyle: const TextStyle(
+          color: AppColors.textPrimary,
+          fontFamily: 'Inter',
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),

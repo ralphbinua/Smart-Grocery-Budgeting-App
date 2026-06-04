@@ -11,8 +11,12 @@ class AIRecommendationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
-    final itemsWithAlt = cart.items.where((i) => i.alternative != null).toList();
-    final itemsWithDeals = cart.items.where((i) => i.coupons.isNotEmpty).toList();
+    final itemsWithAlt = cart.items
+        .where((i) => i.alternative != null)
+        .toList();
+    final itemsWithDeals = cart.items
+        .where((i) => i.coupons.isNotEmpty)
+        .toList();
     final totalSavings = _calcPotentialSavings(itemsWithAlt);
 
     return Scaffold(
@@ -27,7 +31,11 @@ class AIRecommendationsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAIHeader(itemsWithAlt.length, itemsWithDeals.length, totalSavings),
+                  _buildAIHeader(
+                    itemsWithAlt.length,
+                    itemsWithDeals.length,
+                    totalSavings,
+                  ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -61,21 +69,30 @@ class AIRecommendationsScreen extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.swap_horiz_rounded,
-                              color: AppColors.success, size: 18),
+                          Icon(
+                            Icons.swap_horiz_rounded,
+                            color: AppColors.success,
+                            size: 18,
+                          ),
                           SizedBox(width: 8),
-                          Text('Cheaper Alternatives',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary)),
+                          Text(
+                            'Cheaper Alternatives',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: 4),
                       Text(
-                          'AI-recommended products with equal or better quality',
-                          style: TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary)),
+                        'AI-recommended products with equal or better quality',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -96,22 +113,27 @@ class AIRecommendationsScreen extends StatelessWidget {
                   padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Row(
                     children: [
-                      Icon(Icons.local_offer_rounded,
-                          color: AppColors.warning, size: 18),
+                      Icon(
+                        Icons.local_offer_rounded,
+                        color: AppColors.warning,
+                        size: 18,
+                      ),
                       SizedBox(width: 8),
-                      Text('Active Deals & Coupons',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary)),
+                      Text(
+                        'Active Deals & Coupons',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (ctx, i) =>
-                      _buildDealsSection(ctx, itemsWithDeals[i]),
+                  (ctx, i) => _buildDealsSection(ctx, itemsWithDeals[i]),
                   childCount: itemsWithDeals.length,
                 ),
               ),
@@ -142,11 +164,14 @@ class AIRecommendationsScreen extends StatelessWidget {
         children: [
           Icon(Icons.auto_awesome, color: AppColors.accent, size: 22),
           SizedBox(width: 10),
-          Text('Smart Deals',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary)),
+          Text(
+            'Smart Deals',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -170,48 +195,60 @@ class AIRecommendationsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient:
-                  const LinearGradient(colors: AppColors.purpleGradient),
+              gradient: const LinearGradient(colors: AppColors.purpleGradient),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.4),
-                    blurRadius: 20)
+                  color: AppColors.accent.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                ),
               ],
             ),
-            child: const Icon(Icons.psychology_rounded,
-                color: Colors.white, size: 28),
+            child: const Icon(
+              Icons.psychology_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('AI Recommendation Engine',
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary)),
+                const Text(
+                  'AI Recommendation Engine',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '$altCount swap${altCount == 1 ? '' : 's'} · $dealCount deal${dealCount == 1 ? '' : 's'} found',
                   style: const TextStyle(
-                      fontSize: 12, color: AppColors.textSecondary),
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 if (potentialSavings > 0) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.trending_down_rounded,
-                          color: AppColors.success, size: 16),
+                      const Icon(
+                        Icons.trending_down_rounded,
+                        color: AppColors.success,
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           'Potential savings: ₱${potentialSavings.toStringAsFixed(2)}',
                           style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w700),
+                            fontSize: 13,
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w700,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -230,11 +267,9 @@ class AIRecommendationsScreen extends StatelessWidget {
   // ─── Swap Card ──────────────────────────────────────────────────────────────
   Widget _buildSwapCard(BuildContext context, CartItem item) {
     final altName = item.alternative!['name'] as String;
-    final altPrice =
-        (item.alternative!['price'] as num).toDouble();
+    final altPrice = (item.alternative!['price'] as num).toDouble();
     final savings = item.price - altPrice;
-    final pctOff =
-        ((savings / item.price) * 100).toStringAsFixed(0);
+    final pctOff = ((savings / item.price) * 100).toStringAsFixed(0);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -257,33 +292,46 @@ class AIRecommendationsScreen extends StatelessWidget {
                     color: AppColors.danger.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.remove,
-                      color: AppColors.danger, size: 16),
+                  child: const Icon(
+                    Icons.remove,
+                    color: AppColors.danger,
+                    size: 16,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name,
-                          style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                              decoration: TextDecoration.lineThrough),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                      Text(item.category,
-                          style: const TextStyle(
-                              fontSize: 11, color: AppColors.textMuted)),
+                      Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.category,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Text('₱${item.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary)),
+                Text(
+                  '₱${item.price.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
 
@@ -294,18 +342,24 @@ class AIRecommendationsScreen extends StatelessWidget {
                 const Divider(color: Color(0xFF1E293B), height: 28),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: AppColors.purpleGradient),
+                      colors: AppColors.purpleGradient,
+                    ),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text('AI SWAP',
-                      style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5)),
+                  child: const Text(
+                    'AI SWAP',
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -321,36 +375,48 @@ class AIRecommendationsScreen extends StatelessWidget {
                     color: AppColors.success.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check,
-                      color: AppColors.success, size: 16),
+                  child: const Icon(
+                    Icons.check,
+                    color: AppColors.success,
+                    size: 16,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(altName,
-                          style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis),
+                      Text(
+                        altName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       if (item.note != null && item.note!.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.verified_rounded,
-                                size: 12, color: AppColors.info),
+                            const Icon(
+                              Icons.verified_rounded,
+                              size: 12,
+                              color: AppColors.info,
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
-                              child: Text(item.note!,
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.info,
-                                      fontStyle: FontStyle.italic),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis),
+                              child: Text(
+                                item.note!,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.info,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -362,23 +428,31 @@ class AIRecommendationsScreen extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('₱${altPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.success)),
+                    Text(
+                      '₱${altPrice.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.success,
+                      ),
+                    ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text('$pctOff% off',
-                          style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w700)),
+                      child: Text(
+                        '$pctOff% off',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -393,26 +467,34 @@ class AIRecommendationsScreen extends StatelessWidget {
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.success.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: AppColors.success.withValues(alpha: 0.2)),
+                        color: AppColors.success.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.savings_rounded,
-                            color: AppColors.success, size: 14),
+                        const Icon(
+                          Icons.savings_rounded,
+                          color: AppColors.success,
+                          size: 14,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                              'Save ₱${savings.toStringAsFixed(2)} × ${item.quantity}',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.success,
-                                  fontWeight: FontWeight.w700),
-                              overflow: TextOverflow.ellipsis),
+                            'Save ₱${savings.toStringAsFixed(2)} × ${item.quantity}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -421,26 +503,32 @@ class AIRecommendationsScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: () {
-                    Provider.of<CartProvider>(context, listen: false)
-                        .acceptSwap(item.id);
+                    Provider.of<CartProvider>(
+                      context,
+                      listen: false,
+                    ).acceptSwap(item.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content:
-                              Text('✓ Swapped to $altName'),
-                          backgroundColor: AppColors.success),
+                        content: Text('✓ Swapped to $altName'),
+                        backgroundColor: AppColors.success,
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.success,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24)),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                   ),
-                  child: const Text('Swap',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w800, fontSize: 13)),
+                  child: const Text(
+                    'Swap',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  ),
                 ),
               ],
             ),
@@ -459,11 +547,14 @@ class AIRecommendationsScreen extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
-            child: Text(item.name,
-                style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary)),
+            child: Text(
+              item.name,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
           ...item.coupons.map(
             (deal) => Padding(
@@ -482,8 +573,10 @@ class AIRecommendationsScreen extends StatelessWidget {
       ('🥛', 'Store brands are 20–40% cheaper with similar nutritional value.'),
       ('🛒', 'Buying in bulk reduces cost per unit for pantry staples.'),
       ('📊', 'Accepting AI alternatives saves avg. ₱15–₱40 per item.'),
-      ('🏷️',
-          'Check SM, Robinsons, and Puregold weekly promos for better deals.'),
+      (
+        '🏷️',
+        'Check SM, Robinsons, and Puregold weekly promos for better deals.',
+      ),
     ];
 
     return Container(
@@ -498,33 +591,40 @@ class AIRecommendationsScreen extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.lightbulb_rounded,
-                  color: AppColors.warning, size: 18),
+              Icon(Icons.lightbulb_rounded, color: AppColors.warning, size: 18),
               SizedBox(width: 8),
-              Text('Smart Shopping Tips',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary)),
+              Text(
+                'Smart Shopping Tips',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
-          ...tips.map((tip) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(tip.$1,
-                        style: const TextStyle(fontSize: 16)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: Text(tip.$2,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary))),
-                  ],
-                ),
-              )),
+          ...tips.map(
+            (tip) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(tip.$1, style: const TextStyle(fontSize: 16)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      tip.$2,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -542,15 +642,21 @@ class AIRecommendationsScreen extends StatelessWidget {
               color: Color(0xFF161F2E),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.auto_awesome,
-                size: 56, color: AppColors.textMuted),
+            child: const Icon(
+              Icons.auto_awesome,
+              size: 56,
+              color: AppColors.textMuted,
+            ),
           ),
           const SizedBox(height: 20),
-          const Text('No recommendations yet',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary)),
+          const Text(
+            'No recommendations yet',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 8),
           const Text(
             'Add your grocery list and tap\n"Analyze List" to get AI-powered deals.',
@@ -567,8 +673,7 @@ class AIRecommendationsScreen extends StatelessWidget {
     double total = 0;
     for (final item in itemsWithAlt) {
       if (item.alternative != null) {
-        final altPrice =
-            (item.alternative!['price'] as num).toDouble();
+        final altPrice = (item.alternative!['price'] as num).toDouble();
         final diff = item.price - altPrice;
         if (diff > 0) total += diff * item.quantity;
       }

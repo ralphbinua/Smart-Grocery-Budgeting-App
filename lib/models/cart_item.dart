@@ -7,8 +7,8 @@ class CartItem {
   final DateTime addedAt;
   int quantity;
   final double savedAmount;
-  final String? note;           // AI quality justification for the alternative
-  final List<String> coupons;   // List of deal/coupon strings from AI
+  final String? note; // AI quality justification for the alternative
+  final List<String> coupons; // List of deal/coupon strings from AI
 
   CartItem({
     required this.id,
@@ -21,9 +21,9 @@ class CartItem {
     List<String>? coupons,
     int? quantity,
     DateTime? addedAt,
-  })  : quantity = quantity ?? 1,
-        coupons = coupons ?? [],
-        addedAt = addedAt ?? DateTime.now();
+  }) : quantity = quantity ?? 1,
+       coupons = coupons ?? [],
+       addedAt = addedAt ?? DateTime.now();
 
   double get total => price * quantity;
   bool get hasDeals => coupons.isNotEmpty;

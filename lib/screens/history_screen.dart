@@ -19,22 +19,39 @@ class HistoryScreen extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         slivers: [
           _buildAppBar(history),
-          if (history.isNotEmpty) SliverToBoxAdapter(child: _buildSummaryCard(history)),
+          if (history.isNotEmpty)
+            SliverToBoxAdapter(child: _buildSummaryCard(history)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
               child: Row(
                 children: [
-                  const Text('Shopping Trips', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  const Text(
+                    'Shopping Trips',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.bgCard,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: const Color(0xFF1E293B)),
                     ),
-                    child: Text('${history.length} trips', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    child: Text(
+                      '${history.length} trips',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -45,7 +62,8 @@ class HistoryScreen extends StatelessWidget {
           else
             SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildTripCard(context, history[index], index),
+                (context, index) =>
+                    _buildTripCard(context, history[index], index),
                 childCount: history.length,
               ),
             ),
@@ -65,7 +83,14 @@ class HistoryScreen extends StatelessWidget {
         children: [
           Icon(Icons.history_rounded, color: AppColors.primary, size: 22),
           SizedBox(width: 10),
-          Text('Purchase History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(
+            'Purchase History',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -89,11 +114,26 @@ class HistoryScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _summaryItem('Total Spent', '₱${totalSpent.toStringAsFixed(0)}', AppColors.info, Icons.payments_rounded),
+          _summaryItem(
+            'Total Spent',
+            '₱${totalSpent.toStringAsFixed(0)}',
+            AppColors.info,
+            Icons.payments_rounded,
+          ),
           _summaryDivider(),
-          _summaryItem('AI Savings', '₱${totalSaved.toStringAsFixed(0)}', AppColors.success, Icons.savings_rounded),
+          _summaryItem(
+            'AI Savings',
+            '₱${totalSaved.toStringAsFixed(0)}',
+            AppColors.success,
+            Icons.savings_rounded,
+          ),
           _summaryDivider(),
-          _summaryItem('Trips', '${history.length}', AppColors.accentLight, Icons.shopping_bag_rounded),
+          _summaryItem(
+            'Trips',
+            '${history.length}',
+            AppColors.accentLight,
+            Icons.shopping_bag_rounded,
+          ),
         ],
       ),
     );
@@ -105,9 +145,22 @@ class HistoryScreen extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
@@ -119,7 +172,11 @@ class HistoryScreen extends StatelessWidget {
 
   Widget _buildTripCard(BuildContext context, PurchaseHistory trip, int index) {
     final pct = trip.budgetUsedPercent;
-    final color = pct > 100 ? AppColors.danger : pct > 85 ? AppColors.warning : AppColors.success;
+    final color = pct > 100
+        ? AppColors.danger
+        : pct > 85
+        ? AppColors.warning
+        : AppColors.success;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -147,25 +204,57 @@ class HistoryScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: const Color(0xFF1E293B)),
                     ),
-                    child: const Center(child: Icon(Icons.receipt_rounded, color: AppColors.primary, size: 22)),
+                    child: const Center(
+                      child: Icon(
+                        Icons.receipt_rounded,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(trip.storeName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        Text(
+                          trip.storeName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
                         const SizedBox(height: 3),
-                        Text(trip.date, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text(
+                          trip.date,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('₱${trip.totalSpent.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                      Text(
+                        '₱${trip.totalSpent.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                       const SizedBox(height: 3),
-                      Text('${trip.items.length} items', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                      Text(
+                        '${trip.items.length} items',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -185,7 +274,14 @@ class HistoryScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text('${pct.toStringAsFixed(0)}%', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                  Text(
+                    '${pct.toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -196,13 +292,25 @@ class HistoryScreen extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 4,
                       children: [
-                        _tripChip(Icons.savings_rounded, 'Saved ₱${trip.totalSaved.toStringAsFixed(0)}', AppColors.success),
-                        _tripChip(Icons.account_balance_wallet_rounded, 'Budget ₱${trip.budgetLimit.toStringAsFixed(0)}', AppColors.info),
+                        _tripChip(
+                          Icons.savings_rounded,
+                          'Saved ₱${trip.totalSaved.toStringAsFixed(0)}',
+                          AppColors.success,
+                        ),
+                        _tripChip(
+                          Icons.account_balance_wallet_rounded,
+                          'Budget ₱${trip.budgetLimit.toStringAsFixed(0)}',
+                          AppColors.info,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
                 ],
               ),
             ],
@@ -223,7 +331,14 @@ class HistoryScreen extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -241,12 +356,27 @@ class HistoryScreen extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFF1E293B)),
             ),
-            child: const Icon(Icons.receipt_long_rounded, size: 56, color: AppColors.textMuted),
+            child: const Icon(
+              Icons.receipt_long_rounded,
+              size: 56,
+              color: AppColors.textMuted,
+            ),
           ),
           const SizedBox(height: 20),
-          const Text('No purchase history yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          const Text(
+            'No purchase history yet',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 8),
-          const Text('Your shopping trips will appear here\nafter you checkout.', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          const Text(
+            'Your shopping trips will appear here\nafter you checkout.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          ),
         ],
       ),
     );

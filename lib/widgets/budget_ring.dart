@@ -16,7 +16,11 @@ class BudgetRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isOver ? AppColors.danger : isNear ? AppColors.warning : AppColors.primary;
+    final color = isOver
+        ? AppColors.danger
+        : isNear
+        ? AppColors.warning
+        : AppColors.primary;
     final percentage = (progress * 100).toStringAsFixed(0);
 
     return SizedBox(
@@ -32,8 +36,18 @@ class BudgetRing extends StatelessWidget {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('$percentage%', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
-              const Text('used', style: TextStyle(fontSize: 9, color: AppColors.textMuted)),
+              Text(
+                '$percentage%',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+              const Text(
+                'used',
+                style: TextStyle(fontSize: 9, color: AppColors.textMuted),
+              ),
             ],
           ),
         ],
@@ -96,5 +110,6 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RingPainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.color != color;
+  bool shouldRepaint(_RingPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.color != color;
 }

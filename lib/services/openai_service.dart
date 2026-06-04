@@ -46,7 +46,8 @@ class AIService {
       };
     }).toList();
 
-    final prompt = '''
+    final prompt =
+        '''
 You are a smart grocery shopping assistant for the Philippines. The user is planning to buy the following items:
 
 ${jsonEncode(itemsJson)}
@@ -91,9 +92,9 @@ Do NOT include any explanation text — only the JSON array.
             {
               'role': 'system',
               'content':
-                  'You are a smart grocery assistant for major Philippine supermarkets (like SM, Puregold, Robinsons). You must ONLY suggest real, specific local brands sold in the Philippines (e.g. Century Tuna, Mega Sardines, Magnolia, Selecta, Lucky Me!, Datu Puti, Piattos, Safeguard, Breeze). Never suggest generic terms like "Brand B Milk" or "Alternative Tuna". Always respond with valid JSON only.'
+                  'You are a smart grocery assistant for major Philippine supermarkets (like SM, Puregold, Robinsons). You must ONLY suggest real, specific local brands sold in the Philippines (e.g. Century Tuna, Mega Sardines, Magnolia, Selecta, Lucky Me!, Datu Puti, Piattos, Safeguard, Breeze). Never suggest generic terms like "Brand B Milk" or "Alternative Tuna". Always respond with valid JSON only.',
             },
-            {'role': 'user', 'content': prompt}
+            {'role': 'user', 'content': prompt},
           ],
           'temperature': 0.3,
         }),
@@ -105,8 +106,9 @@ Do NOT include any explanation text — only the JSON array.
           return _buildFallbackResults(items);
         }
 
-        String content =
-            data['choices'][0]['message']['content'].toString().trim();
+        String content = data['choices'][0]['message']['content']
+            .toString()
+            .trim();
 
         // Extract JSON array
         final startIndex = content.indexOf('[');
@@ -121,7 +123,8 @@ Do NOT include any explanation text — only the JSON array.
         }
       } else {
         debugPrint(
-            'AIService Error: ${response.statusCode} - ${response.body}');
+          'AIService Error: ${response.statusCode} - ${response.body}',
+        );
         return _buildFallbackResults(items);
       }
     } catch (e) {
@@ -130,10 +133,10 @@ Do NOT include any explanation text — only the JSON array.
     }
   }
 
-
   // ─── Fallback Results (when AI unavailable) ─────────────────────────────────
   static List<Map<String, dynamic>> _buildFallbackResults(
-      List<GroceryInputItem> items) {
+    List<GroceryInputItem> items,
+  ) {
     return items.map((item) {
       final price = item.estimatedPrice ?? 50.0;
       return {

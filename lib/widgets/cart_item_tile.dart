@@ -57,7 +57,11 @@ class CartItemTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Icon(_categoryIcon(item.category), color: catColor, size: 22),
+                      child: Icon(
+                        _categoryIcon(item.category),
+                        color: catColor,
+                        size: 22,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -65,7 +69,16 @@ class CartItemTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(
+                          item.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: 3),
                         Wrap(
                           crossAxisAlignment: WrapCrossAlignment.center,
@@ -73,28 +86,59 @@ class CartItemTile extends StatelessWidget {
                           runSpacing: 4,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: catColor.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(5),
                               ),
-                              child: Text(item.category, style: TextStyle(fontSize: 10, color: catColor, fontWeight: FontWeight.w600)),
+                              child: Text(
+                                item.category,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: catColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                            Text('₱${item.price.toStringAsFixed(2)} each', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                            Text(
+                              '₱${item.price.toStringAsFixed(2)} each',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
                             if (item.hasDeals)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.warning.withValues(alpha: 0.12),
+                                  color: AppColors.warning.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.local_offer_rounded, size: 9, color: AppColors.warning),
+                                    const Icon(
+                                      Icons.local_offer_rounded,
+                                      size: 9,
+                                      color: AppColors.warning,
+                                    ),
                                     const SizedBox(width: 3),
-                                    Text('${item.coupons.length} deal${item.coupons.length == 1 ? '' : 's'}',
-                                        style: const TextStyle(fontSize: 9, color: AppColors.warning, fontWeight: FontWeight.w700)),
+                                    Text(
+                                      '${item.coupons.length} deal${item.coupons.length == 1 ? '' : 's'}',
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        color: AppColors.warning,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -107,7 +151,14 @@ class CartItemTile extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('₱${item.total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                      Text(
+                        '₱${item.total.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       _QuantityControl(item: item, cart: cart),
                     ],
@@ -132,7 +183,10 @@ class CartItemTile extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.accent.withValues(alpha: 0.08), AppColors.primary.withValues(alpha: 0.05)],
+          colors: [
+            AppColors.accent.withValues(alpha: 0.08),
+            AppColors.primary.withValues(alpha: 0.05),
+          ],
         ),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
@@ -151,25 +205,41 @@ class CartItemTile extends StatelessWidget {
               children: [
                 Text(
                   'AI: Swap to $altName',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Save ₱${savings.toStringAsFixed(2)} • ₱${altPrice.toStringAsFixed(2)} ea',
-                  style: const TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                if (item.note != null && item.note!.isNotEmpty) ...[  
+                if (item.note != null && item.note!.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(Icons.verified_rounded, size: 10, color: AppColors.info),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 10,
+                        color: AppColors.info,
+                      ),
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
                           item.note!,
-                          style: const TextStyle(fontSize: 10, color: AppColors.info, fontStyle: FontStyle.italic),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.info,
+                            fontStyle: FontStyle.italic,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -183,19 +253,34 @@ class CartItemTile extends StatelessWidget {
           const SizedBox(width: 8),
           GestureDetector(
             onTap: () {
-              Provider.of<CartProvider>(context, listen: false).acceptSwap(item.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Swapped to $altName!')),
-              );
+              Provider.of<CartProvider>(
+                context,
+                listen: false,
+              ).acceptSwap(item.id);
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Swapped to $altName!')));
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 4)],
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                  ),
+                ],
               ),
-              child: const Text('SWAP', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black)),
+              child: const Text(
+                'SWAP',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                ),
+              ),
             ),
           ),
         ],
@@ -280,7 +365,11 @@ class _QuantityControlState extends State<_QuantityControl> {
               color: AppColors.danger.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(7),
             ),
-            child: const Icon(Icons.delete_rounded, size: 14, color: AppColors.danger),
+            child: const Icon(
+              Icons.delete_rounded,
+              size: 14,
+              color: AppColors.danger,
+            ),
           ),
         ),
         const SizedBox(width: 6),
@@ -292,7 +381,11 @@ class _QuantityControlState extends State<_QuantityControl> {
             controller: _controller,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
             decoration: InputDecoration(
               contentPadding: EdgeInsets.zero,
               filled: true,
@@ -302,7 +395,10 @@ class _QuantityControlState extends State<_QuantityControl> {
                 borderSide: BorderSide.none,
               ),
               hintText: '0',
-              hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+              hintStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 13,
+              ),
             ),
             onSubmitted: (_) => _submit(),
             onTapOutside: (_) => _submit(),

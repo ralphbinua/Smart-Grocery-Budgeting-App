@@ -61,7 +61,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Icon(Icons.settings_rounded, color: AppColors.primary, size: 22),
           SizedBox(width: 10),
-          Text('Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(
+            'Settings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -85,9 +92,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_rounded, color: AppColors.primary, size: 13),
+                Icon(
+                  Icons.cloud_off_rounded,
+                  color: AppColors.primary,
+                  size: 13,
+                ),
                 SizedBox(width: 4),
-                Text('Local', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w700)),
+                Text(
+                  'Local',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
@@ -112,11 +130,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
-                cart.budgetLimit > 0 ? '₱${cart.budgetLimit.toStringAsFixed(0)}' : 'Set →',
-                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 13),
+                cart.budgetLimit > 0
+                    ? '₱${cart.budgetLimit.toStringAsFixed(0)}'
+                    : 'Set →',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
@@ -130,8 +156,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Monthly Budget Goal', style: TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
-                  Text('₱${_monthlyBudget.toStringAsFixed(0)}', style: const TextStyle(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w700)),
+                  const Text(
+                    'Monthly Budget Goal',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '₱${_monthlyBudget.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -147,8 +187,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('₱500', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
-                  Text('₱20,000', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                  Text(
+                    '₱500',
+                    style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                  ),
+                  Text(
+                    '₱20,000',
+                    style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                  ),
                 ],
               ),
             ],
@@ -203,7 +249,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text('Active', style: TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Active',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.success,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ),
         const Divider(color: Color(0xFF1E293B), height: 1),
@@ -216,13 +269,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: AppColors.warning.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text('3 tiers', style: TextStyle(fontSize: 12, color: AppColors.warning, fontWeight: FontWeight.w700)),
+            child: const Text(
+              '3 tiers',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.warning,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ),
       ],
     );
   }
-
 
   Widget _buildAboutSection() {
     return _sectionCard(
@@ -230,11 +289,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       icon: Icons.info_rounded,
       iconColor: AppColors.textMuted,
       children: [
-        _settingRow(label: 'App Version', subtitle: 'v1.0.0 (Capstone Build)', trailing: const SizedBox()),
+        _settingRow(
+          label: 'App Version',
+          subtitle: 'v1.0.0 (Capstone Build)',
+          trailing: const SizedBox(),
+        ),
         const Divider(color: Color(0xFF1E293B), height: 1),
-        _settingRow(label: 'Research Title', subtitle: 'AI-Powered Smart Grocery Budgeting System', trailing: const SizedBox()),
+        _settingRow(
+          label: 'Research Title',
+          subtitle: 'AI-Powered Smart Grocery Budgeting System',
+          trailing: const SizedBox(),
+        ),
         const Divider(color: Color(0xFF1E293B), height: 1),
-        _settingRow(label: 'School', subtitle: 'Capstone Project 2026', trailing: const SizedBox()),
+        _settingRow(
+          label: 'School',
+          subtitle: 'Capstone Project 2026',
+          trailing: const SizedBox(),
+        ),
       ],
     );
   }
@@ -259,7 +330,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Icon(icon, color: iconColor, size: 18),
                 const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -270,7 +348,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _toggleRow({required String label, required String subtitle, required bool value, required ValueChanged<bool> onChanged}) {
+  Widget _toggleRow({
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -279,9 +362,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -297,7 +393,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _settingRow({required String label, required String subtitle, required Widget trailing}) {
+  Widget _settingRow({
+    required String label,
+    required String subtitle,
+    required Widget trailing,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
@@ -306,9 +406,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -318,7 +431,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _actionRow({required String label, required IconData icon, Color? iconColor, Color? textColor, Widget? trailing, required VoidCallback onTap}) {
+  Widget _actionRow({
+    required String label,
+    required IconData icon,
+    Color? iconColor,
+    Color? textColor,
+    Widget? trailing,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -328,9 +448,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icon(icon, color: iconColor ?? AppColors.textSecondary, size: 20),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(label, style: TextStyle(fontSize: 14, color: textColor ?? AppColors.textPrimary, fontWeight: FontWeight.w500)),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textColor ?? AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-            trailing ?? const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
+            trailing ??
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textMuted,
+                  size: 20,
+                ),
           ],
         ),
       ),
@@ -339,29 +471,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // Scanner type picker removed — no longer needed in the new AI-input flow.
 
-
-
   void _showBudgetEdit(BuildContext context, CartProvider cart) {
-    final controller = TextEditingController(text: cart.budgetLimit > 0 ? cart.budgetLimit.toStringAsFixed(0) : '');
+    final controller = TextEditingController(
+      text: cart.budgetLimit > 0 ? cart.budgetLimit.toStringAsFixed(0) : '',
+    );
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Set Shopping Budget', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+        title: const Text(
+          'Set Shopping Budget',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           autofocus: true,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
           decoration: const InputDecoration(
             hintText: '0.00',
             prefixText: '₱ ',
-            prefixStyle: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 22),
+            prefixStyle: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
+            ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
           ElevatedButton(
             onPressed: () {
               final v = double.tryParse(controller.text) ?? 0;
@@ -400,7 +552,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Admin Login', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Admin Login',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: TextField(
           controller: controller,
           obscureText: true,
@@ -411,15 +569,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
           ElevatedButton(
             onPressed: () {
-              if (controller.text == 'admin123') { // Simple hardcoded password for now
+              if (controller.text == 'admin123') {
+                // Simple hardcoded password for now
                 Navigator.pop(ctx);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminDashboardScreen(),
+                  ),
+                );
               } else {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid password')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Invalid password')),
+                );
               }
             },
             child: const Text('Login'),
