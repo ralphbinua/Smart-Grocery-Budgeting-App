@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:math';
+
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -198,8 +198,7 @@ class CartProvider with ChangeNotifier {
           }
         }
 
-        _items.insert(
-          0,
+        _items.add(
           CartItem(
             id: '${DateTime.now().millisecondsSinceEpoch}_$i',
             name: r['name'] as String? ?? input.name,
@@ -270,9 +269,28 @@ class CartProvider with ChangeNotifier {
     if (_items.isEmpty) return;
     final now = DateTime.now();
 
+    // Derive store name from the most common promo store in the cart
+    final storeNames = _items
+        .expand((i) => i.coupons)
+        .where((c) => c.contains('@'))
+        .map((c) => c.split('@').last.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    final storeName = storeNames.isNotEmpty
+        ? storeNames
+            .fold<Map<String, int>>({}, (map, s) {
+              map[s] = (map[s] ?? 0) + 1;
+              return map;
+            })
+            .entries
+            .reduce((a, b) => a.value >= b.value ? a : b)
+            .key
+        : 'Grocery Store';
+
     final newHistoryItem = PurchaseHistory(
       id: now.millisecondsSinceEpoch.toString(),
       date: '${_monthName(now.month)} ${now.day}, ${now.year}',
+      storeName: storeName,
       items: _items
           .map((i) => HistoryItem(
                 name: i.name,
@@ -563,8 +581,4 @@ class CartProvider with ChangeNotifier {
     return months[m - 1];
   }
 
-  String randomId() {
-    final r = Random();
-    return List.generate(8, (_) => r.nextInt(10)).join();
-  }
 }

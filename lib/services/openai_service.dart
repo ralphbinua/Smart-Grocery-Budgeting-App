@@ -143,61 +143,6 @@ Do NOT include any explanation text — only the JSON array.
     }
   }
 
-  // ─── Single Item Fallback (kept for potential future use) ───────────────────
-  static Future<Map<String, dynamic>?> getAlternative(
-    String name,
-    double price,
-    String category,
-  ) async {
-    if (_apiKey.isEmpty || _apiKey.contains('your_')) return null;
-
-    final prompt = '''
-The user wants to buy: '$name' for $price PHP (category: '$category').
-Suggest a cheaper, commonly available alternative product in the Philippines.
-Respond STRICTLY with a JSON object:
-{ "name": "...", "price": <number less than $price> }
-If no cheaper alternative exists, respond with exactly: null
-''';
-
-    try {
-      final response = await http.post(
-        Uri.parse(_apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_apiKey',
-        },
-        body: jsonEncode({
-          'model': 'llama-3.1-8b-instant',
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are a smart grocery shopping assistant that helps users save money.'
-            },
-            {'role': 'user', 'content': prompt}
-          ],
-          'temperature': 0.3,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['choices'] == null || data['choices'].isEmpty) return null;
-        String content =
-            data['choices'][0]['message']['content'].toString().trim();
-        if (content == 'null' || content.isEmpty) return null;
-        final startIndex = content.indexOf('{');
-        final endIndex = content.lastIndexOf('}');
-        if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
-          return jsonDecode(content.substring(startIndex, endIndex + 1))
-              as Map<String, dynamic>;
-        }
-      }
-    } catch (e) {
-      debugPrint('AIService getAlternative Exception: $e');
-    }
-    return null;
-  }
 
   // ─── Fallback Results (when AI unavailable) ─────────────────────────────────
   static List<Map<String, dynamic>> _buildFallbackResults(
