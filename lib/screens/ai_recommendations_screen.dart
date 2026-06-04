@@ -1,48 +1,12 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
 import '../theme/app_theme.dart';
 import '../widgets/deal_card.dart';
 
-class AIRecommendationsScreen extends StatefulWidget {
+class AIRecommendationsScreen extends StatelessWidget {
   const AIRecommendationsScreen({super.key});
-
-  @override
-  State<AIRecommendationsScreen> createState() => _AIRecommendationsScreenState();
-}
-
-class _AIRecommendationsScreenState extends State<AIRecommendationsScreen> {
-  static const _baseUrl = 'https://smart-grocery-budgeting-app.onrender.com';
-  List<Map<String, dynamic>> _dbPromos = [];
-  bool _promosLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchDbPromos();
-  }
-
-  Future<void> _fetchDbPromos() async {
-    try {
-      final res = await http.get(Uri.parse('$_baseUrl/api/products/promos'));
-      if (res.statusCode == 200) {
-        final List<dynamic> data = json.decode(res.body);
-        if (mounted) {
-          setState(() {
-            _dbPromos = data.cast<Map<String, dynamic>>();
-            _promosLoading = false;
-          });
-        }
-      } else {
-        if (mounted) setState(() => _promosLoading = false);
-      }
-    } catch (_) {
-      if (mounted) setState(() => _promosLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,9 +33,6 @@ class _AIRecommendationsScreenState extends State<AIRecommendationsScreen> {
               ),
             ),
           ),
-
-          // ── Store Promos Section (always shown, DB-backed) ─────────
-          SliverToBoxAdapter(child: _buildStorePromosSection()),
 
           // ── Empty State ────────────────────────────────────────────
           if (itemsWithAlt.isEmpty && itemsWithDeals.isEmpty)
@@ -170,148 +131,6 @@ class _AIRecommendationsScreenState extends State<AIRecommendationsScreen> {
       ),
     );
   }
-  // ─── Store Promos (DB-backed) ────────────────────────────────────────────────
-  Widget _buildStorePromosSection() {
-    if (_promosLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: SizedBox(
-          height: 130,
-          child: Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)),
-        ),
-      );
-    }
-    if (_dbPromos.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFF8C00)]),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.local_fire_department_rounded, color: Colors.black, size: 14),
-                ),
-                const SizedBox(width: 8),
-                const Text('Store Promos',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text('${_dbPromos.length} deals',
-                      style: const TextStyle(fontSize: 10, color: Color(0xFFFFD700), fontWeight: FontWeight.w600)),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {
-                    setState(() => _promosLoading = true);
-                    _fetchDbPromos();
-                  },
-                  child: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary, size: 18),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 138,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 16),
-              itemCount: _dbPromos.length,
-              itemBuilder: (ctx, i) => _buildPromoCard(_dbPromos[i]),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPromoCard(Map<String, dynamic> promo) {
-    final name = (promo['name'] as String? ?? 'Product').split(' ').take(4).join(' ');
-    final label = promo['promoLabel'] as String? ?? 'On Sale';
-    final store = promo['promoStore'] as String? ?? '';
-    final discount = (promo['promoDiscount'] as num?)?.toInt() ?? 0;
-    final price = (promo['latestPrice'] as num?)?.toDouble() ?? 0.0;
-
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1204), Color(0xFF0F1A10)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (discount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6B00)]),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text('$discount% OFF',
-                      style: const TextStyle(fontSize: 10, color: Colors.black, fontWeight: FontWeight.w800)),
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text('PROMO',
-                      style: TextStyle(fontSize: 10, color: Color(0xFFFFD700), fontWeight: FontWeight.w800)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(name,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-              maxLines: 2, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 4),
-          Text(label,
-              style: const TextStyle(fontSize: 10, color: Color(0xFFFFD700), fontStyle: FontStyle.italic),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('₱${price.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-              if (store.isNotEmpty)
-                Flexible(
-                  child: Text(store.split(' ').first,
-                      style: const TextStyle(fontSize: 9, color: AppColors.textSecondary),
-                      overflow: TextOverflow.ellipsis),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
 
   Widget _buildAppBar() {
     return SliverAppBar(

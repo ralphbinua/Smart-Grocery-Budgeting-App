@@ -182,18 +182,20 @@ class CartProvider with ChangeNotifier {
         final List<String> coupons = List<String>.from(
             (r['coupons'] as List?)?.cast<String>() ?? []);
 
-        // Fallback: If DB indicates a promo is active but AI returned no coupons,
-        // build a rich coupon string from the real DB promo fields.
+        // If DB indicates a promo is active, build a rich coupon string
+        // from the real DB promo fields and ensure it is in our coupons list.
         final dbEntry = dbGroundingData?[input.name.toLowerCase().trim()];
         final isDbPromo = dbEntry?['isPromo'] == true;
-        if (isDbPromo && coupons.isEmpty) {
+        if (isDbPromo) {
           final label   = (dbEntry?['promoLabel']  as String?)?.trim() ?? '';
           final store   = (dbEntry?['promoStore']   as String?)?.trim() ?? '';
           final discount = dbEntry?['promoDiscount'] ?? 0;
           String promoText = label.isNotEmpty ? label : 'Special Promo';
           if (discount is num && discount > 0) promoText += ' – ${discount.toInt()}% OFF';
           if (store.isNotEmpty) promoText += ' @ $store';
-          coupons.add(promoText);
+          if (!coupons.contains(promoText)) {
+            coupons.insert(0, promoText);
+          }
         }
 
         _items.insert(
