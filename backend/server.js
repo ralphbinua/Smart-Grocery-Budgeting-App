@@ -130,7 +130,10 @@ app.post('/api/products/search-batch', async (req, res) => {
           name: product.name,
           price: product.latestPrice,
           category: product.category,
-          isPromo: product.isPromo
+          isPromo: product.isPromo,
+          promoLabel: product.promoLabel || '',
+          promoDiscount: product.promoDiscount || 0,
+          promoStore: product.promoStore || '',
         };
       } else {
         results[rawName] = null;
@@ -163,6 +166,16 @@ app.patch('/api/products/bulk-promo', async (req, res) => {
       results.push(updated ? { barcode, status: 'updated', name: updated.name } : { barcode, status: 'not_found' });
     }
     res.status(200).json({ results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all products that are currently on promo
+app.get('/api/products/promos', async (req, res) => {
+  try {
+    const promos = await Product.find({ isPromo: true }).sort({ name: 1 });
+    res.status(200).json(promos);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

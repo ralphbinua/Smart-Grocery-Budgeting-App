@@ -7,49 +7,55 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
 import '../models/cart_item.dart';
+import '../models/grocery_input_item.dart';
 import '../models/purchase_history.dart';
 import '../services/openai_service.dart';
-import '../services/socket_service.dart';
+import '../theme/app_theme.dart';
 
 class CartProvider with ChangeNotifier {
-  // Constants for demo/mocking
-  static const List<Map<String, dynamic>> _mockItems = [
-    {'name': 'Nestle Milk 1L', 'price': 98.0, 'category': 'Dairy'},
-    {'name': 'Gardenia Bread', 'price': 68.0, 'category': 'Bakery'},
-    {'name': 'Lucky Me Noodles', 'price': 15.0, 'category': 'Instant Food'},
-    {'name': 'C2 Green Tea 500ml', 'price': 25.0, 'category': 'Beverages'},
-    {'name': 'Oishi Prawn Crackers', 'price': 35.0, 'category': 'Snacks'},
-    {'name': 'Purefoods Hotdog 500g', 'price': 145.0, 'category': 'Meat'},
-    {'name': 'San Miguel Beer 330ml', 'price': 55.0, 'category': 'Beverages'},
-    {'name': 'Century Tuna 155g', 'price': 42.0, 'category': 'Canned Goods'},
-  ];
-
+  static const String _baseUrl = 'https://smart-grocery-budgeting-app.onrender.com';
   double _budgetLimit = 0.0;
+
+  // ─── Grocery Input List (user's raw typed list, pre-analysis) ───────────────
+  final List<GroceryInputItem> _groceryList = [];
+
+  // ─── Analyzed Cart Items (populated after AI analysis) ──────────────────────
   List<CartItem> _items = [];
-  bool _isConnected = false;
-  bool _isScanning = false;
-  String? _scannerType; // 'phone' or 'iot'
+
+  bool _isAnalyzing = false;
   final List<PurchaseHistory> _history = [];
-  final SocketService _socketService = SocketService();
+
+  // ─── Alert tracking (each fires only once per session) ──────────────────────
+  bool _alert50Shown = false;
+  bool _alert80Shown = false;
+  bool _alert100Shown = false;
 
   CartProvider() {
     _loadPreferences();
-    _initSocket();
   }
 
-  // --- Getters ---
+  // ─── Getters ─────────────────────────────────────────────────────────────────
   double get budgetLimit => _budgetLimit;
-  double get totalSpent => _items.fold(0.0, (sum, item) => sum + item.total);
+  double get totalSpent => _items.fold(0.0, (sum, i) => sum + i.total);
   double get remaining => _budgetLimit - totalSpent;
-  double get progressPercent => _budgetLimit > 0 ? (totalSpent / _budgetLimit).clamp(0.0, 1.0) : 0.0;
+  double get progressPercent =>
+      _budgetLimit > 0 ? (totalSpent / _budgetLimit).clamp(0.0, 1.0) : 0.0;
   List<CartItem> get items => List.unmodifiable(_items);
-  bool get isConnected => _isConnected;
-  bool get isScanning => _isScanning;
-  String? get scannerType => _scannerType;
-  List<PurchaseHistory> get history => List.unmodifiable(_history);
+  List<GroceryInputItem> get groceryList => List.unmodifiable(_groceryList);
+  bool get isAnalyzing => _isAnalyzing;
   bool get isOverBudget => remaining < 0;
-  bool get isNearLimit => _budgetLimit > 0 && remaining / _budgetLimit < 0.15 && !isOverBudget;
-  int get totalItems => _items.fold(0, (sum, item) => sum + item.quantity);
+  bool get isNearLimit =>
+      _budgetLimit > 0 && progressPercent >= 0.8 && !isOverBudget;
+  int get totalItems => _items.fold(0, (sum, i) => sum + i.quantity);
+  List<PurchaseHistory> get history => List.unmodifiable(_history);
+  bool get hasGroceryItems => _groceryList.isNotEmpty;
+  bool get hasAnalyzedItems => _items.isNotEmpty;
+
+  int get couponCount =>
+      _items.where((i) => i.coupons.isNotEmpty).length;
+
+  int get alternativeCount =>
+      _items.where((i) => i.alternative != null).length;
 
   double get totalSavedByAI {
     double saved = 0;
@@ -67,79 +73,156 @@ class CartProvider with ChangeNotifier {
     return map;
   }
 
-  // --- Persistence & Initialization ---
+  // ─── Persistence ──────────────────────────────────────────────────────────────
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     _budgetLimit = prefs.getDouble('budget_limit') ?? 0.0;
-    _scannerType = prefs.getString('scanner_type');
     notifyListeners();
   }
 
-  void _initSocket() {
-    _socketService.connectToServer((data) {
-      if (data != null && data['barcode'] != null) {
-        processBarcode(data['barcode'].toString());
-        setIoTConnected(true);
-      }
-    });
-  }
-
-  // --- State Modifiers ---
   void setBudget(double limit) async {
     _budgetLimit = limit;
+    // Reset alert flags when budget is changed
+    _alert50Shown = false;
+    _alert80Shown = false;
+    _alert100Shown = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('budget_limit', limit);
     notifyListeners();
   }
 
-  Future<void> setScannerType(String? type) async {
-    _scannerType = type;
-    final prefs = await SharedPreferences.getInstance();
-    if (type == null) {
-      await prefs.remove('scanner_type');
-    } else {
-      await prefs.setString('scanner_type', type);
-    }
+  // ─── Grocery Input List Operations ───────────────────────────────────────────
+  void addGroceryItem(String name, {int quantity = 1, double? estimatedPrice}) {
+    if (name.trim().isEmpty) return;
+    // Check for duplicates (case-insensitive)
+    final exists = _groceryList.any(
+        (i) => i.name.toLowerCase() == name.trim().toLowerCase());
+    if (exists) return;
+
+    _groceryList.add(GroceryInputItem(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name.trim(),
+      quantity: quantity,
+      estimatedPrice: estimatedPrice,
+    ));
     notifyListeners();
   }
 
-  void setIoTConnected(bool connected) {
-    _isConnected = connected;
+  void removeGroceryItem(String id) {
+    _groceryList.removeWhere((i) => i.id == id);
     notifyListeners();
   }
 
-  // --- Cart Operations ---
-  void addItemWithAI(String name, double price, Map<String, dynamic>? alternative, {String category = 'General', String barcode = '', int initialQuantity = 1}) {
-    final previouslyOver = isOverBudget;
-    final previouslyNear = isNearLimit;
+  void updateGroceryItem(String id,
+      {String? name, int? quantity, double? estimatedPrice}) {
+    final idx = _groceryList.indexWhere((i) => i.id == id);
+    if (idx < 0) return;
+    final item = _groceryList[idx];
+    if (name != null) item.name = name;
+    if (quantity != null) item.quantity = quantity;
+    if (estimatedPrice != null) item.estimatedPrice = estimatedPrice;
+    notifyListeners();
+  }
 
-    final existingIndex = _items.indexWhere((i) => i.name == name);
-    if (existingIndex >= 0) {
-      _items[existingIndex] = _items[existingIndex].copyWith(
-        quantity: _items[existingIndex].quantity + 1,
+  void clearGroceryList() {
+    _groceryList.clear();
+    notifyListeners();
+  }
+
+  // ─── AI Batch Analysis ────────────────────────────────────────────────────────
+  Future<void> analyzeList() async {
+    if (_groceryList.isEmpty || _isAnalyzing) return;
+
+    _isAnalyzing = true;
+    notifyListeners();
+
+    Map<String, Map<String, dynamic>>? dbGroundingData;
+    try {
+      final namesToSearch = _groceryList.map((item) => item.name).toList();
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/products/search-batch'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'names': namesToSearch}),
       );
-    } else {
-      _items.insert(0, CartItem(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
-        price: price,
-        category: category,
-        barcode: barcode.isNotEmpty ? barcode : _randomBarcode(),
-        alternative: alternative,
-        quantity: initialQuantity,
-      ));
-    }
-    notifyListeners();
 
-    if (isOverBudget && !previouslyOver) {
-      _showOverBudgetAlert();
-    } else if (isNearLimit && !previouslyNear) {
-      _showNearLimitAlert();
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> rawMap = json.decode(response.body);
+        dbGroundingData = {};
+        rawMap.forEach((key, value) {
+          if (value != null) {
+            dbGroundingData![key.toLowerCase().trim()] = Map<String, dynamic>.from(value);
+          }
+        });
+        debugPrint('[Grounding] Successfully matched ${dbGroundingData.length} items from database.');
+      } else {
+        debugPrint('[Grounding] Failed to load grounding data: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('[Grounding] Network/DB search error, proceeding with AI-only: $e');
+    }
+
+    try {
+      final results = await AIService.analyzeGroceryList(
+        _groceryList,
+        dbGroundingData: dbGroundingData,
+      );
+
+      _items = [];
+
+      for (int i = 0; i < results.length && i < _groceryList.length; i++) {
+        final r = results[i];
+        final input = _groceryList[i];
+
+        final double price =
+            (r['price'] as num?)?.toDouble() ?? input.estimatedPrice ?? 50.0;
+        final String category = r['category'] as String? ?? 'General';
+        final Map<String, dynamic>? alt =
+            r['alternative'] as Map<String, dynamic>?;
+        final String note = r['note'] as String? ?? '';
+        final List<String> coupons = List<String>.from(
+            (r['coupons'] as List?)?.cast<String>() ?? []);
+
+        // Fallback: If DB indicates a promo is active but AI returned no coupons,
+        // build a rich coupon string from the real DB promo fields.
+        final dbEntry = dbGroundingData?[input.name.toLowerCase().trim()];
+        final isDbPromo = dbEntry?['isPromo'] == true;
+        if (isDbPromo && coupons.isEmpty) {
+          final label   = (dbEntry?['promoLabel']  as String?)?.trim() ?? '';
+          final store   = (dbEntry?['promoStore']   as String?)?.trim() ?? '';
+          final discount = dbEntry?['promoDiscount'] ?? 0;
+          String promoText = label.isNotEmpty ? label : 'Special Promo';
+          if (discount is num && discount > 0) promoText += ' – ${discount.toInt()}% OFF';
+          if (store.isNotEmpty) promoText += ' @ $store';
+          coupons.add(promoText);
+        }
+
+        _items.insert(
+          0,
+          CartItem(
+            id: '${DateTime.now().millisecondsSinceEpoch}_$i',
+            name: r['name'] as String? ?? input.name,
+            price: price,
+            category: category,
+            alternative: alt,
+            note: note.isNotEmpty ? note : null,
+            coupons: coupons,
+            quantity: input.quantity,
+          ),
+        );
+      }
+
+      _checkBudgetAlerts();
+    } catch (e) {
+      debugPrint('CartProvider.analyzeList error: $e');
+    } finally {
+      _isAnalyzing = false;
+      notifyListeners();
     }
   }
 
+  // ─── Cart Item Operations ─────────────────────────────────────────────────────
   void removeItem(String id) {
-    _items.removeWhere((item) => item.id == id);
+    _items.removeWhere((i) => i.id == id);
     notifyListeners();
   }
 
@@ -150,17 +233,9 @@ class CartProvider with ChangeNotifier {
     }
     final idx = _items.indexWhere((i) => i.id == id);
     if (idx >= 0) {
-      final previouslyOver = isOverBudget;
-      final previouslyNear = isNearLimit;
-
       _items[idx] = _items[idx].copyWith(quantity: quantity);
+      _checkBudgetAlerts();
       notifyListeners();
-
-      if (isOverBudget && !previouslyOver) {
-        _showOverBudgetAlert();
-      } else if (isNearLimit && !previouslyNear) {
-        _showNearLimitAlert();
-      }
     }
   }
 
@@ -170,59 +245,65 @@ class CartProvider with ChangeNotifier {
       final original = _items[idx];
       final alt = original.alternative!;
       final altPrice = (alt['price'] as num).toDouble();
-      
+
       _items[idx] = CartItem(
         id: original.id,
         name: alt['name'] as String,
         price: altPrice,
         category: original.category,
-        barcode: original.barcode,
         alternative: null,
-        savedAmount: (original.price - altPrice > 0) ? (original.price - altPrice) : 0.0,
+        savedAmount:
+            (original.price - altPrice > 0) ? (original.price - altPrice) : 0.0,
+        note: null,
+        coupons: original.coupons,
         quantity: original.quantity,
-        scannedAt: original.scannedAt,
+        addedAt: original.addedAt,
       );
       notifyListeners();
     }
   }
 
+  // ─── Checkout ──────────────────────────────────────────────────────────────────
   Future<void> clearCart() async {
     if (_items.isEmpty) return;
     final now = DateTime.now();
-    
+
     final newHistoryItem = PurchaseHistory(
       id: now.millisecondsSinceEpoch.toString(),
       date: '${_monthName(now.month)} ${now.day}, ${now.year}',
-      items: _items.map((i) => HistoryItem(
-        name: i.name,
-        price: i.price,
-        quantity: i.quantity,
-        category: i.category,
-      )).toList(),
+      items: _items
+          .map((i) => HistoryItem(
+                name: i.name,
+                price: i.price,
+                quantity: i.quantity,
+                category: i.category,
+              ))
+          .toList(),
       totalSpent: totalSpent,
       budgetLimit: _budgetLimit,
       totalSaved: totalSavedByAI,
     );
-    
+
     _history.insert(0, newHistoryItem);
-    
-    // Save to MongoDB Cloud Database via our Node.js Backend
+
+    // Save to MongoDB Cloud Database via Node.js backend
     try {
-      // Automatically updated to your computer's exact WiFi IP address for Android compatibility!
-      final url = Uri.parse('https://smart-grocery-budgeting-app.onrender.com/api/trips'); 
+      final url =
+          Uri.parse('$_baseUrl/api/trips');
       await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'totalSpent': totalSpent,
           'totalSaved': totalSavedByAI,
-          'items': _items.map((i) => {
-            'barcode': i.barcode,
-            'name': i.name,
-            'price': i.price,
-            'quantity': i.quantity,
-            'isAiSwapped': i.savedAmount > 0
-          }).toList()
+          'items': _items
+              .map((i) => {
+                    'name': i.name,
+                    'price': i.price,
+                    'quantity': i.quantity,
+                    'isAiSwapped': i.savedAmount > 0,
+                  })
+              .toList()
         }),
       );
       debugPrint('[MongoDB] Checkout Trip successfully saved to Cloud!');
@@ -231,292 +312,79 @@ class CartProvider with ChangeNotifier {
     }
 
     _items = [];
+    _groceryList.clear();
+    // Reset alerts for new session
+    _alert50Shown = false;
+    _alert80Shown = false;
+    _alert100Shown = false;
     notifyListeners();
   }
 
-  // --- Scanning Logic ---
-  void simulateScan() async {
-    _isScanning = true;
-    notifyListeners();
+  // ─── Budget Alert System ─────────────────────────────────────────────────────
+  void _checkBudgetAlerts() {
+    if (_budgetLimit <= 0) return;
 
-    final random = Random();
-    final pick = _mockItems[random.nextInt(_mockItems.length)];
-    
-    final String name = pick['name'] as String;
-    final double price = pick['price'] as double;
-    final String category = pick['category'] as String;
+    final pct = progressPercent;
 
-    final aiAlternative = await AIService.getAlternative(name, price, category);
-
-    addItemWithAI(name, price, aiAlternative, category: category);
-
-    _isScanning = false;
-    notifyListeners();
+    if (pct >= 1.0 && !_alert100Shown) {
+      _alert100Shown = true;
+      _showOverBudgetAlert();
+    } else if (pct >= 0.8 && !_alert80Shown) {
+      _alert80Shown = true;
+      _showThresholdSnackbar(
+        '⚠️ 80% of budget used',
+        'Only ₱${remaining.toStringAsFixed(2)} remaining.',
+        const Color(0xFFF59E0B),
+      );
+    } else if (pct >= 0.5 && !_alert50Shown) {
+      _alert50Shown = true;
+      _showThresholdSnackbar(
+        '💡 Halfway through your budget',
+        '₱${remaining.toStringAsFixed(2)} remaining. Consider alternatives!',
+        AppColors.info,
+      );
+    }
   }
 
-  Future<void> processBarcode(String barcode) async {
-    _isScanning = true;
-    notifyListeners();
-
-    String name = 'Unknown Product';
-    String category = 'General';
-    double price = 0.0;
-    bool foundInDb = false;
-
-    // 1. Check our Custom MongoDB Cloud Database First!
-    try {
-      final dbUrl = Uri.parse('https://smart-grocery-budgeting-app.onrender.com/api/products/$barcode');
-      final dbResponse = await http.get(dbUrl).timeout(const Duration(seconds: 3));
-      
-      if (dbResponse.statusCode == 200) {
-        final data = json.decode(dbResponse.body);
-        name = data['name'];
-        category = data['category'] ?? 'General';
-        price = (data['latestPrice'] as num).toDouble();
-        foundInDb = true;
-        debugPrint('[MongoDB] Product found locally! $name at P$price');
-      }
-    } catch (e) {
-      debugPrint('[MongoDB] Product not in local DB, checking internet...');
-    }
-
-    // 2. If not in DB, fallback to OpenFoodFacts (Crowdsource Mode)
-    if (!foundInDb) {
-      bool foundInApi = false;
-      
-      try {
-        final url = Uri.parse('https://world.openfoodfacts.org/api/v0/product/$barcode.json');
-        final response = await http.get(url).timeout(const Duration(seconds: 5));
-        
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          if (data['status'] == 1 && data['product'] != null) {
-            final product = data['product'];
-            final prodName = product['product_name'] ?? product['product_name_en'] ?? product['generic_name'] ?? 'Unknown Product';
-            final brands = product['brands'] ?? '';
-            name = brands.isNotEmpty ? '$brands - $prodName' : prodName;
-            category = _parseCategory(product);
-            
-            // Temporary fallback price for API products until user edits it manually
-            price = 10.0 + (barcode.hashCode.abs() % 290); 
-            foundInApi = true;
-          }
-        }
-      } catch (e) {
-        debugPrint('Barcode API Error: $e');
-      }
-
-      if (!foundInApi) {
-        _isScanning = false;
-        notifyListeners();
-
-        final manualData = await _requestManualInput(barcode);
-        if (manualData == null) {
-          return; // User cancelled
-        }
-        
-        name = manualData['name'];
-        price = manualData['price'];
-        category = 'General';
-        
-        _isScanning = true;
-        notifyListeners();
-      }
-
-      // 3. Save this new item to MongoDB so it's there next time!
-      try {
-        final dbPostUrl = Uri.parse('https://smart-grocery-budgeting-app.onrender.com/api/products');
-        await http.post(
-          dbPostUrl,
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode({
-            'barcode': barcode,
-            'name': name,
-            'category': category,
-            'latestPrice': price
-          }),
-        );
-        debugPrint('[MongoDB] New product saved to Cloud for future scans!');
-      } catch (e) {
-        debugPrint('[MongoDB] Error saving new product: $e');
-      }
-    }
-
-    // 4. Ask user for quantity
-    final qty = await _requestQuantityInput(name, price);
-    if (qty == null) {
-      // User cancelled — abort
-      _isScanning = false;
-      notifyListeners();
-      return;
-    }
-
-    // 5. Get AI recommendation
-    final aiAlternative = await AIService.getAlternative(name, price, category);
-
-    addItemWithAI(name, price, aiAlternative, category: category, barcode: barcode, initialQuantity: qty);
-
-    _isScanning = false;
-    notifyListeners();
-  }
-
-  String _parseCategory(Map<String, dynamic> product) {
-    if (product['categories_tags'] != null && (product['categories_tags'] as List).isNotEmpty) {
-      final tag = (product['categories_tags'] as List).first.toString();
-      return tag.contains(':') ? tag.split(':').last.replaceAll('-', ' ').toUpperCase() : tag;
-    } else if (product['categories'] != null && product['categories'].toString().isNotEmpty) {
-      return product['categories'].toString().split(',').first.trim();
-    }
-    return 'General';
-  }
-
-  Future<int?> _requestQuantityInput(String name, double price) async {
+  void _showThresholdSnackbar(
+      String title, String subtitle, Color color) {
     final context = navigatorKey.currentContext;
-    if (context == null) return null;
+    if (context == null) return;
 
-    final controller = TextEditingController(text: '1');
-
-    return await showDialog<int>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.shopping_cart_rounded, color: Color(0xFF10B981), size: 22),
-            SizedBox(width: 10),
-            Text('Add to Cart', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15), maxLines: 2, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 4),
-            Text('₱${price.toStringAsFixed(2)} each', style: const TextStyle(color: Colors.white54, fontSize: 13)),
-            const SizedBox(height: 20),
-            const Text('Quantity', style: TextStyle(color: Colors.white70, fontSize: 13)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.black26,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                hintText: '1',
-                hintStyle: const TextStyle(color: Colors.white38),
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: color,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Row(
+            children: [
+              const Icon(Icons.notifications_active_rounded,
+                  color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 13)),
+                    Text(subtitle,
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 11)),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          duration: const Duration(seconds: 5),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final val = int.tryParse(controller.text.trim());
-              if (val != null && val > 0) {
-                Navigator.pop(ctx, val);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Add to Cart', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<Map<String, dynamic>?> _requestManualInput(String barcode) async {
-    final context = navigatorKey.currentContext;
-    if (context == null) return null;
-
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-
-    return await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Unknown Product', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('This barcode was not found in our database. Please enter the details manually.', style: TextStyle(color: Colors.white70, fontSize: 13)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Product Name',
-                labelStyle: const TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Colors.black26,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: priceController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Price (₱)',
-                labelStyle: const TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Colors.black26,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final price = double.tryParse(priceController.text);
-              if (nameController.text.isNotEmpty && price != null && price > 0) {
-                Navigator.pop(ctx, {'name': nameController.text.trim(), 'price': price});
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Save Product', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  String _randomBarcode() {
-    final r = Random();
-    return List.generate(13, (_) => r.nextInt(10)).join();
-  }
-
-  String _monthName(int m) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return months[m - 1];
+      );
+    });
   }
 
   void _showOverBudgetAlert() {
@@ -528,7 +396,8 @@ class CartProvider with ChangeNotifier {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -536,7 +405,7 @@ class CartProvider with ChangeNotifier {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withOpacity(0.12),
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -547,21 +416,18 @@ class CartProvider with ChangeNotifier {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Budget Limit Exceeded!',
+                'Budget Limit Reached!',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               Text(
-                'This item puts you over your shopping budget limit by ₱${(totalSpent - budgetLimit).toStringAsFixed(2)}.',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                'Your cart is over budget by ₱${(totalSpent - budgetLimit).toStringAsFixed(2)}. Consider swapping to cheaper alternatives.',
+                style:
+                    const TextStyle(color: Colors.white70, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -572,13 +438,14 @@ class CartProvider with ChangeNotifier {
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFF334155)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text(
-                        'Acknowledge',
-                        style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
-                      ),
+                      child: const Text('Got it',
+                          style: TextStyle(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -590,13 +457,14 @@ class CartProvider with ChangeNotifier {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFEF4444),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text(
-                        'Adjust Budget',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
+                      child: const Text('Adjust Budget',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -608,69 +476,50 @@ class CartProvider with ChangeNotifier {
     });
   }
 
-  void _showNearLimitAlert() {
-    final context = navigatorKey.currentContext;
-    if (context == null) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFFD97706),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          content: Row(
-            children: [
-              const Icon(Icons.notifications_active_rounded, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Approaching Budget Limit', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
-                    Text('You have used over 85% of your trip budget. Remaining: ₱${remaining.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    });
-  }
-
   void _showBudgetDialogFromAlert(BuildContext context) {
-    final controller = TextEditingController(text: budgetLimit > 0 ? budgetLimit.toStringAsFixed(0) : '');
+    final controller = TextEditingController(
+        text: budgetLimit > 0 ? budgetLimit.toStringAsFixed(0) : '');
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF10B981), size: 22),
+            Icon(Icons.account_balance_wallet_rounded,
+                color: Color(0xFF10B981), size: 22),
             SizedBox(width: 10),
-            Text('Adjust Budget', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Adjust Budget',
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Set a new shopping budget for this trip.', style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const Text('Set a new shopping budget for this trip.',
+                style: TextStyle(color: Colors.white70, fontSize: 13)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               autofocus: true,
-              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
               decoration: const InputDecoration(
                 hintText: '0.00',
                 prefixText: '₱ ',
-                prefixStyle: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 22),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF10B981))),
+                prefixStyle: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22),
+                enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white30)),
+                focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF10B981))),
               ),
             ),
           ],
@@ -678,7 +527,8 @@ class CartProvider with ChangeNotifier {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text('Cancel',
+                style: TextStyle(color: Colors.white54)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -686,23 +536,33 @@ class CartProvider with ChangeNotifier {
               if (budget > 0) {
                 setBudget(budget);
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Budget updated to ₱${budget.toStringAsFixed(2)}'),
-                    backgroundColor: const Color(0xFF1E293B),
-                  ),
-                );
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Save Budget', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Save Budget',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────────
+  String _monthName(int m) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[m - 1];
+  }
+
+  String randomId() {
+    final r = Random();
+    return List.generate(8, (_) => r.nextInt(10)).join();
   }
 }
