@@ -18,6 +18,11 @@ class CartItemTile extends StatelessWidget {
       'Meat': AppColors.danger,
       'Canned Goods': Color(0xFF10B981),
       'Instant Food': Color(0xFFF97316),
+      'Produce': Color(0xFF84CC16),
+      'Condiments': Color(0xFFF59E0B),
+      'Personal Care': Color(0xFF8B5CF6),
+      'Household': Color(0xFF06B6D4),
+      'Frozen': Color(0xFF60A5FA),
       'General': AppColors.textMuted,
     };
     return colors[cat] ?? AppColors.textMuted;
@@ -48,7 +53,7 @@ class CartItemTile extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: catColor.withOpacity(0.12),
+                      color: catColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
@@ -65,16 +70,34 @@ class CartItemTile extends StatelessWidget {
                         Wrap(
                           crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 6,
+                          runSpacing: 4,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: catColor.withOpacity(0.12),
+                                color: catColor.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               child: Text(item.category, style: TextStyle(fontSize: 10, color: catColor, fontWeight: FontWeight.w600)),
                             ),
                             Text('₱${item.price.toStringAsFixed(2)} each', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                            if (item.hasDeals)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.local_offer_rounded, size: 9, color: AppColors.warning),
+                                    const SizedBox(width: 3),
+                                    Text('${item.coupons.length} deal${item.coupons.length == 1 ? '' : 's'}',
+                                        style: const TextStyle(fontSize: 9, color: AppColors.warning, fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       ],
@@ -109,15 +132,18 @@ class CartItemTile extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.accent.withOpacity(0.08), AppColors.primary.withOpacity(0.05)],
+          colors: [AppColors.accent.withValues(alpha: 0.08), AppColors.primary.withValues(alpha: 0.05)],
         ),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.accent.withOpacity(0.25)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome, color: AppColors.accent, size: 18),
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.auto_awesome, color: AppColors.accent, size: 16),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -134,6 +160,23 @@ class CartItemTile extends StatelessWidget {
                   'Save ₱${savings.toStringAsFixed(2)} • ₱${altPrice.toStringAsFixed(2)} ea',
                   style: const TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600),
                 ),
+                if (item.note != null && item.note!.isNotEmpty) ...[  
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      const Icon(Icons.verified_rounded, size: 10, color: AppColors.info),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          item.note!,
+                          style: const TextStyle(fontSize: 10, color: AppColors.info, fontStyle: FontStyle.italic),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -150,7 +193,7 @@ class CartItemTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 4)],
+                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 4)],
               ),
               child: const Text('SWAP', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black)),
             ),
@@ -169,6 +212,11 @@ class CartItemTile extends StatelessWidget {
       'Meat': Icons.set_meal_rounded,
       'Canned Goods': Icons.inventory_2_rounded,
       'Instant Food': Icons.ramen_dining_rounded,
+      'Produce': Icons.eco_rounded,
+      'Condiments': Icons.local_dining_rounded,
+      'Personal Care': Icons.spa_rounded,
+      'Household': Icons.home_rounded,
+      'Frozen': Icons.ac_unit_rounded,
       'General': Icons.shopping_basket_rounded,
     };
     return icons[cat] ?? Icons.shopping_basket_rounded;
@@ -229,7 +277,7 @@ class _QuantityControlState extends State<_QuantityControl> {
             width: 26,
             height: 26,
             decoration: BoxDecoration(
-              color: AppColors.danger.withOpacity(0.12),
+              color: AppColors.danger.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(7),
             ),
             child: const Icon(Icons.delete_rounded, size: 14, color: AppColors.danger),

@@ -60,7 +60,7 @@ class ReceiptScreen extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -87,7 +87,7 @@ class ReceiptScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.15),
+                  color: AppColors.success.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text('PAID', style: TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w800, letterSpacing: 1)),
@@ -218,9 +218,9 @@ class ReceiptScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.08),
+              color: AppColors.success.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.success.withOpacity(0.2)),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [

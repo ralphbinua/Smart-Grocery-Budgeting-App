@@ -80,7 +80,7 @@ class _RingPainter extends CustomPainter {
     // Glow effect
     if (progress > 0) {
       final glowPaint = Paint()
-        ..color = color.withOpacity(0.3)
+        ..color = color.withValues(alpha: 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth + 6
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)

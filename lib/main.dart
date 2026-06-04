@@ -50,9 +50,8 @@ class _RootNavigation extends StatefulWidget {
   State<_RootNavigation> createState() => _RootNavigationState();
 }
 
-class _RootNavigationState extends State<_RootNavigation> with SingleTickerProviderStateMixin {
+class _RootNavigationState extends State<_RootNavigation> {
   int _selectedIndex = 0;
-  late final AnimationController _notifController;
 
   final List<Widget> _screens = const [
     DashboardScreen(),
@@ -64,156 +63,111 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
   @override
   void initState() {
     super.initState();
-    _notifController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..repeat(reverse: true);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startOnboardingFlow();
+      _showBudgetSetupDialog();
     });
   }
 
-  void _startOnboardingFlow() async {
-    final cart = Provider.of<CartProvider>(context, listen: false);
-    
-    // Clear previous session preferences so it always asks on startup
-    await cart.setScannerType(null);
-    cart.setBudget(0.0); // Reset budget to 0 for a fresh session
-
-    if (mounted) {
-      _showScannerSelectionDialog();
-    }
-  }
-
-  void _showScannerSelectionDialog() {
-    final cart = Provider.of<CartProvider>(context, listen: false);
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.qr_code_scanner_rounded, color: AppColors.primary, size: 22),
-            SizedBox(width: 10),
-            Text('Choose Scanner', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Select your preferred input method for this shopping session.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            const SizedBox(height: 20),
-            _selectionTile(
-              icon: Icons.camera_alt_rounded,
-              title: 'Phone Camera',
-              subtitle: 'Scan barcodes using your phone',
-              onTap: () {
-                cart.setScannerType('phone');
-                Navigator.pop(ctx);
-                _checkInitialBudget();
-              },
-            ),
-            const SizedBox(height: 12),
-            _selectionTile(
-              icon: Icons.memory_rounded,
-              title: 'IoT Scanner',
-              subtitle: 'Use the built-in Smart Cart scanner',
-              onTap: () {
-                cart.setScannerType('iot');
-                Navigator.pop(ctx);
-                _checkInitialBudget();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _selectionTile({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
-    return ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFF1E293B))),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
-        child: Icon(icon, color: AppColors.primary, size: 20),
-      ),
-      title: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-    );
-  }
-
-  void _checkInitialBudget() {
-    final cart = Provider.of<CartProvider>(context, listen: false);
-    if (cart.budgetLimit <= 0) {
-      _showBudgetSetupDialog();
-    }
-  }
-
   void _showBudgetSetupDialog() {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    // Only show on fresh start (no budget set)
+    if (cart.budgetLimit > 0) return;
+
     final controller = TextEditingController();
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.account_balance_wallet_rounded, color: AppColors.primary, size: 22),
-            SizedBox(width: 10),
-            Text('Set Your Budget', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
-          ],
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter your shopping budget for this trip.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            const SizedBox(height: 16),
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: AppColors.primaryGradient),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.shopping_cart_rounded,
+                  color: Colors.black, size: 32),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Welcome to SmartCart!',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Set your budget for this shopping trip. The AI will help you shop smarter and save money.',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
             TextField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               autofocus: true,
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800),
+              textAlign: TextAlign.center,
               decoration: const InputDecoration(
                 hintText: '0.00',
                 prefixText: '₱ ',
-                prefixStyle: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 22),
+                prefixStyle: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 28),
               ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  final budget = double.tryParse(controller.text) ?? 0;
+                  if (budget > 0) {
+                    Provider.of<CartProvider>(context, listen: false)
+                        .setBudget(budget);
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            'Budget set to ₱${budget.toStringAsFixed(2)} — start adding items!'),
+                        backgroundColor: AppColors.bgCardAlt,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Set Budget & Start Shopping',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Skip for now',
+                  style:
+                      TextStyle(color: AppColors.textMuted, fontSize: 13)),
             ),
           ],
         ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              final budget = double.tryParse(controller.text) ?? 0;
-              if (budget > 0) {
-                Provider.of<CartProvider>(context, listen: false).setBudget(budget);
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Budget set to ₱${budget.toStringAsFixed(2)}'),
-                    backgroundColor: AppColors.bgCardAlt,
-                  ),
-                );
-              }
-            },
-            child: const Text('Start Shopping'),
-          ),
-        ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _notifController.dispose();
-    super.dispose();
   }
 
   @override
@@ -242,12 +196,26 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
             children: [
-              _navItem(0, Icons.shopping_cart_rounded, Icons.shopping_cart_outlined, 'Cart', badge: cart.totalItems > 0 ? '${cart.totalItems}' : null),
-              _navItem(1, Icons.auto_awesome, Icons.auto_awesome_outlined, 'AI', badge: cart.items.where((i) => i.alternative != null).length > 0
-                  ? '${cart.items.where((i) => i.alternative != null).length}'
-                  : null),
-              _navItem(2, Icons.history_rounded, Icons.history_rounded, 'History'),
-              _navItem(3, Icons.settings_rounded, Icons.settings_outlined, 'Settings'),
+              _navItem(
+                0,
+                Icons.shopping_cart_rounded,
+                Icons.shopping_cart_outlined,
+                'Cart',
+                badge: cart.totalItems > 0 ? '${cart.totalItems}' : null,
+              ),
+              _navItem(
+                1,
+                Icons.auto_awesome,
+                Icons.auto_awesome_outlined,
+                'Deals',
+                badge: (cart.alternativeCount + cart.couponCount) > 0
+                    ? '${cart.alternativeCount + cart.couponCount}'
+                    : null,
+              ),
+              _navItem(2, Icons.history_rounded, Icons.history_rounded,
+                  'History'),
+              _navItem(3, Icons.settings_rounded, Icons.settings_outlined,
+                  'Settings'),
             ],
           ),
         ),
@@ -255,7 +223,13 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
     );
   }
 
-  Widget _navItem(int index, IconData selectedIcon, IconData unselectedIcon, String label, {String? badge}) {
+  Widget _navItem(
+    int index,
+    IconData selectedIcon,
+    IconData unselectedIcon,
+    String label, {
+    String? badge,
+  }) {
     final isSelected = _selectedIndex == index;
     final color = isSelected ? AppColors.primary : AppColors.textMuted;
 
@@ -267,7 +241,9 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withOpacity(0.08) : Colors.transparent,
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.08)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -278,7 +254,8 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
                 children: [
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                    transitionBuilder: (child, anim) =>
+                        ScaleTransition(scale: anim, child: child),
                     child: Icon(
                       isSelected ? selectedIcon : unselectedIcon,
                       key: ValueKey(isSelected),
@@ -291,12 +268,18 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
                       right: -8,
                       top: -6,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: AppColors.primaryGradient),
+                          gradient: const LinearGradient(
+                              colors: AppColors.primaryGradient),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(badge, style: const TextStyle(fontSize: 9, color: Colors.black, fontWeight: FontWeight.w800)),
+                        child: Text(badge,
+                            style: const TextStyle(
+                                fontSize: 9,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w800)),
                       ),
                     ),
                 ],
@@ -306,7 +289,8 @@ class _RootNavigationState extends State<_RootNavigation> with SingleTickerProvi
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight:
+                      isSelected ? FontWeight.w700 : FontWeight.w400,
                   color: color,
                 ),
               ),

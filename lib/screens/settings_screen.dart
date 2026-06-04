@@ -14,7 +14,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _aiSuggestionsEnabled = true;
-  bool _iotAutoConnect = true;
   double _monthlyBudget = 5000.0;
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 20),
                   _buildPreferencesSection(),
                   const SizedBox(height: 20),
-                  _buildIoTSection(cart),
+                  _buildAISection(),
                   const SizedBox(height: 20),
                   _buildAboutSection(),
                   const SizedBox(height: 20),
@@ -80,7 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Row(
@@ -111,9 +110,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 cart.budgetLimit > 0 ? '₱${cart.budgetLimit.toStringAsFixed(0)}' : 'Set →',
@@ -182,40 +181,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildIoTSection(CartProvider cart) {
+  Widget _buildAISection() {
     return _sectionCard(
-      title: 'IoT Cart Settings',
-      icon: Icons.sensors_rounded,
+      title: 'AI & Recommendations',
+      icon: Icons.auto_awesome,
       iconColor: AppColors.accent,
       children: [
         _toggleRow(
-          label: 'Auto-connect IoT Cart',
-          subtitle: 'Connect when nearby via Wi-Fi',
-          value: _iotAutoConnect,
-          onChanged: (v) => setState(() => _iotAutoConnect = v),
+          label: 'AI Suggestions',
+          subtitle: 'Show cheaper product alternatives',
+          value: _aiSuggestionsEnabled,
+          onChanged: (v) => setState(() => _aiSuggestionsEnabled = v),
         ),
         const Divider(color: Color(0xFF1E293B), height: 1),
         _settingRow(
-          label: 'Device Pairing',
-          subtitle: 'ESP32 Cart #SG-001',
+          label: 'AI Engine',
+          subtitle: 'Groq LLaMA 3.1 (Fast & Free)',
           trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text('Paired', style: TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w700)),
+            child: const Text('Active', style: TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w700)),
           ),
         ),
         const Divider(color: Color(0xFF1E293B), height: 1),
-        _actionRow(
-          label: 'Scanner Type',
-          icon: cart.scannerType == 'phone' ? Icons.camera_alt_rounded : Icons.qr_code_scanner_rounded,
-          iconColor: AppColors.textMuted,
-          onTap: () => _showScannerTypePicker(context, cart),
-          trailing: Text(
-            cart.scannerType == 'phone' ? 'Phone Camera' : cart.scannerType == 'iot' ? 'IoT Scanner' : 'Not Set',
-            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13),
+        _settingRow(
+          label: 'Budget Alerts',
+          subtitle: 'Notified at 50%, 80%, and 100%',
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text('3 tiers', style: TextStyle(fontSize: 12, color: AppColors.warning, fontWeight: FontWeight.w700)),
           ),
         ),
       ],
@@ -231,7 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         _settingRow(label: 'App Version', subtitle: 'v1.0.0 (Capstone Build)', trailing: const SizedBox()),
         const Divider(color: Color(0xFF1E293B), height: 1),
-        _settingRow(label: 'Research Title', subtitle: 'IoT-Enabled Smart Grocery Budgeting', trailing: const SizedBox()),
+        _settingRow(label: 'Research Title', subtitle: 'AI-Powered Smart Grocery Budgeting System', trailing: const SizedBox()),
         const Divider(color: Color(0xFF1E293B), height: 1),
         _settingRow(label: 'School', subtitle: 'Capstone Project 2026', trailing: const SizedBox()),
       ],
@@ -287,7 +288,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             inactiveThumbColor: AppColors.textMuted,
             inactiveTrackColor: const Color(0xFF1E293B),
           ),
@@ -336,84 +337,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showScannerTypePicker(BuildContext context, CartProvider cart) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.bgCard,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Select Default Scanner', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            const SizedBox(height: 16),
-            _pickerOption(
-              context,
-              'Phone Camera',
-              Icons.camera_alt_rounded,
-              'Use your device camera',
-              cart.scannerType == 'phone',
-              () => cart.setScannerType('phone'),
-            ),
-            const SizedBox(height: 12),
-            _pickerOption(
-              context,
-              'IoT Scanner',
-              Icons.memory_rounded,
-              'Use the scanner on your Smart Cart',
-              cart.scannerType == 'iot',
-              () => cart.setScannerType('iot'),
-            ),
-            const SizedBox(height: 12),
-            _pickerOption(
-              context,
-              'Always Ask',
-              Icons.question_mark_rounded,
-              'Choose every time you scan',
-              cart.scannerType == null,
-              () => cart.setScannerType(null),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
+  // Scanner type picker removed — no longer needed in the new AI-input flow.
 
-  Widget _pickerOption(BuildContext context, String title, IconData icon, String subtitle, bool selected, VoidCallback onTap) {
-    return InkWell(
-      onTap: () {
-        onTap();
-        Navigator.pop(context);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppColors.primary.withOpacity(0.3) : const Color(0xFF1E293B)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: selected ? AppColors.primary : AppColors.textSecondary),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(color: AppColors.textPrimary, fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
-                  Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                ],
-              ),
-            ),
-            if (selected) const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
 
 
   void _showBudgetEdit(BuildContext context, CartProvider cart) {

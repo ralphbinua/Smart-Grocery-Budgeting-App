@@ -16,10 +16,10 @@ class AISuggestionCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.accent.withOpacity(0.08), AppColors.primary.withOpacity(0.04)],
+          colors: [AppColors.accent.withValues(alpha: 0.08), AppColors.primary.withValues(alpha: 0.04)],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accent.withOpacity(0.25)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
