@@ -60,7 +60,7 @@ For EACH item in the list, provide a JSON object with:
 3. "category" (String) — If "dbCategory" is provided, you MUST use that exact category. Otherwise, use one of: Dairy, Bakery, Beverages, Snacks, Meat, Canned Goods, Instant Food, Produce, Condiments, Personal Care, Household, Frozen, General.
 4. "alternative" (Object or null) — if a cheaper, commonly available alternative exists in PH:
    { "name": "...", "price": <number less than price> }
-   CRITICAL: The alternative MUST be a real, specific product brand commonly available in major Philippine supermarkets (e.g. Puregold, SM Supermarket, Robinsons). 
+   CRITICAL: The alternative MUST be a real, specific product brand commonly available in major Philippine supermarkets (e.g. Puregold, SM Supermarket, Robinsons).
    Never suggest generic placeholder names (like "Alternative Milk", "Brand B Milk", "Cheaper Brand").
    Examples:
    - For "Nestle Fresh Milk", suggest "Cowhead Pure Milk" or "Magnolia Fresh Milk".
@@ -87,7 +87,7 @@ Do NOT include any explanation text — only the JSON array.
           'Authorization': 'Bearer $_apiKey',
         },
         body: jsonEncode({
-          'model': 'llama-3.1-8b-instant',
+          'model': 'openai/gpt-oss-20b',
           'messages': [
             {
               'role': 'system',
