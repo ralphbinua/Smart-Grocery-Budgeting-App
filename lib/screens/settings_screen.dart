@@ -12,7 +12,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
   bool _aiSuggestionsEnabled = true;
   double _monthlyBudget = 5000.0;
   @override
@@ -34,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 20),
                   _buildBudgetSection(context, cart),
                   const SizedBox(height: 20),
-                  _buildPreferencesSection(),
+                  _buildPreferencesSection(cart),
                   const SizedBox(height: 20),
                   _buildAISection(),
                   const SizedBox(height: 20),
@@ -204,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildPreferencesSection() {
+  Widget _buildPreferencesSection(CartProvider cart) {
     return _sectionCard(
       title: 'Preferences',
       icon: Icons.tune_rounded,
@@ -213,8 +212,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _toggleRow(
           label: 'Budget Notifications',
           subtitle: 'Alert when near limit',
-          value: _notificationsEnabled,
-          onChanged: (v) => setState(() => _notificationsEnabled = v),
+          value: cart.notificationsEnabled,
+          onChanged: cart.setNotificationsEnabled,
         ),
         const Divider(color: Color(0xFF1E293B), height: 1),
         _toggleRow(

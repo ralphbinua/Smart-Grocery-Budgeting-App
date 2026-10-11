@@ -166,7 +166,39 @@ class CartItemTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (hasAlt) _buildAltSuggestion(context, item),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+              child: Row(
+                children: [
+                  Icon(
+                    item.isPurchased
+                        ? Icons.check_circle
+                        : Icons.pending_outlined,
+                    size: 16,
+                    color: item.isPurchased
+                        ? AppColors.success
+                        : AppColors.textMuted,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    item.isPurchased ? 'Purchased' : 'Planned',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () =>
+                        cart.setPurchased(item.id, !item.isPurchased),
+                    child: Text(
+                      item.isPurchased ? 'Undo purchase' : 'Mark purchased',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hasAlt && !item.isPurchased) _buildAltSuggestion(context, item),
           ],
         ),
       ),

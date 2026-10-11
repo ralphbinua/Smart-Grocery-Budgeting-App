@@ -218,7 +218,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                         ),
                       ),
-                    if (cart.items.isNotEmpty)
+                    if (cart.purchasedItemCount > 0)
                       IconButton(
                         onPressed: () => _showCheckoutConfirm(context),
                         icon: const Icon(
@@ -297,7 +297,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
               Text(
                 cart.hasAnalyzedItems
-                    ? '${cart.totalItems} items · ₱${cart.totalSpent.toStringAsFixed(0)} spent'
+                    ? '${cart.totalItems} items · ₱${cart.totalSpent.toStringAsFixed(0)} spent · ₱${cart.plannedTotal.toStringAsFixed(0)} planned'
                     : '${cart.groceryList.length} item${cart.groceryList.length == 1 ? '' : 's'} in list',
                 style: const TextStyle(
                   fontSize: 11,
@@ -484,6 +484,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ),
                   ],
                 ),
+                if (cart.hasAnalyzedItems) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Planned: ₱${cart.plannedTotal.toStringAsFixed(2)}  •  Projected total: ₱${(cart.totalSpent + cart.plannedTotal).toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

@@ -29,6 +29,7 @@ class CartProvider with ChangeNotifier {
   bool _alert50Shown = false;
   bool _alert80Shown = false;
   bool _alert100Shown = false;
+  bool _notificationsEnabled = true;
 
   CartProvider() {
     _loadPreferences();
@@ -36,13 +37,18 @@ class CartProvider with ChangeNotifier {
 
   // ─── Getters ─────────────────────────────────────────────────────────────────
   double get budgetLimit => _budgetLimit;
-  double get totalSpent => _items.fold(0.0, (sum, i) => sum + i.total);
+  double get totalSpent =>
+      _items.where((i) => i.isPurchased).fold(0.0, (sum, i) => sum + i.total);
+  double get plannedTotal =>
+      _items.where((i) => !i.isPurchased).fold(0.0, (sum, i) => sum + i.total);
+  int get purchasedItemCount => _items.where((i) => i.isPurchased).length;
   double get remaining => _budgetLimit - totalSpent;
   double get progressPercent =>
       _budgetLimit > 0 ? (totalSpent / _budgetLimit).clamp(0.0, 1.0) : 0.0;
   List<CartItem> get items => List.unmodifiable(_items);
   List<GroceryInputItem> get groceryList => List.unmodifiable(_groceryList);
   bool get isAnalyzing => _isAnalyzing;
+  bool get notificationsEnabled => _notificationsEnabled;
   bool get isOverBudget => remaining < 0;
   bool get isNearLimit =>
       _budgetLimit > 0 && progressPercent >= 0.8 && !isOverBudget;
@@ -58,14 +64,14 @@ class CartProvider with ChangeNotifier {
   double get totalSavedByAI {
     double saved = 0;
     for (final item in _items) {
-      saved += item.savedAmount * item.quantity;
+      if (item.isPurchased) saved += item.savedAmount * item.quantity;
     }
     return saved;
   }
 
   Map<String, double> get spendingByCategory {
     final map = <String, double>{};
-    for (final item in _items) {
+    for (final item in _items.where((i) => i.isPurchased)) {
       map[item.category] = (map[item.category] ?? 0) + item.total;
     }
     return map;
@@ -75,7 +81,16 @@ class CartProvider with ChangeNotifier {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     _budgetLimit = prefs.getDouble('budget_limit') ?? 0.0;
+    _notificationsEnabled =
+        prefs.getBool('budget_notifications_enabled') ?? true;
     notifyListeners();
+  }
+
+  void setNotificationsEnabled(bool enabled) async {
+    _notificationsEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('budget_notifications_enabled', enabled);
   }
 
   void setBudget(double limit) async {
@@ -179,11 +194,21 @@ class CartProvider with ChangeNotifier {
         dbGroundingData: dbGroundingData,
       );
 
-      _items = [];
+      final purchasedItems = _items.where((item) => item.isPurchased).toList();
+      final purchasedByInputId = {
+        for (final item in purchasedItems)
+          if (item.isPurchased && item.sourceInputId != null)
+            item.sourceInputId!: item,
+      };
+      _items = [...purchasedItems];
 
       for (int i = 0; i < results.length && i < _groceryList.length; i++) {
         final r = results[i];
         final input = _groceryList[i];
+        final purchased = purchasedByInputId[input.id];
+        if (purchased != null) {
+          continue;
+        }
 
         final double price =
             (r['price'] as num?)?.toDouble() ?? input.estimatedPrice ?? 50.0;
@@ -205,6 +230,7 @@ class CartProvider with ChangeNotifier {
             note: note.isNotEmpty ? note : null,
             coupons: coupons,
             quantity: input.quantity,
+            sourceInputId: input.id,
           ),
         );
       }
@@ -237,9 +263,19 @@ class CartProvider with ChangeNotifier {
     }
   }
 
+  void setPurchased(String id, bool purchased) {
+    final idx = _items.indexWhere((i) => i.id == id);
+    if (idx < 0 || _items[idx].isPurchased == purchased) return;
+    _items[idx] = _items[idx].copyWith(isPurchased: purchased);
+    _checkBudgetAlerts();
+    notifyListeners();
+  }
+
   void acceptSwap(String id) {
     final idx = _items.indexWhere((i) => i.id == id);
-    if (idx >= 0 && _items[idx].alternative != null) {
+    if (idx >= 0 &&
+        !_items[idx].isPurchased &&
+        _items[idx].alternative != null) {
       final original = _items[idx];
       final alt = original.alternative!;
       final altPrice = (alt['price'] as num).toDouble();
@@ -257,6 +293,8 @@ class CartProvider with ChangeNotifier {
         coupons: original.coupons,
         quantity: original.quantity,
         addedAt: original.addedAt,
+        isPurchased: original.isPurchased,
+        sourceInputId: original.sourceInputId,
       );
       notifyListeners();
     }
@@ -264,11 +302,12 @@ class CartProvider with ChangeNotifier {
 
   // ─── Checkout ──────────────────────────────────────────────────────────────────
   Future<void> clearCart() async {
-    if (_items.isEmpty) return;
+    if (purchasedItemCount == 0) return;
     final now = DateTime.now();
+    final purchasedItems = _items.where((i) => i.isPurchased).toList();
 
     // Derive store name from the most common promo store in the cart
-    final storeNames = _items
+    final storeNames = purchasedItems
         .expand((i) => i.coupons)
         .where((c) => c.contains('@'))
         .map((c) => c.split('@').last.trim())
@@ -289,7 +328,7 @@ class CartProvider with ChangeNotifier {
       id: now.millisecondsSinceEpoch.toString(),
       date: '${_monthName(now.month)} ${now.day}, ${now.year}',
       storeName: storeName,
-      items: _items
+      items: purchasedItems
           .map(
             (i) => HistoryItem(
               name: i.name,
@@ -315,7 +354,7 @@ class CartProvider with ChangeNotifier {
         body: json.encode({
           'totalSpent': totalSpent,
           'totalSaved': totalSavedByAI,
-          'items': _items
+          'items': purchasedItems
               .map(
                 (i) => {
                   'name': i.name,
@@ -343,15 +382,18 @@ class CartProvider with ChangeNotifier {
 
   // ─── Budget Alert System ─────────────────────────────────────────────────────
   void _checkBudgetAlerts() {
-    if (_budgetLimit <= 0) return;
+    if (_budgetLimit <= 0 || !_notificationsEnabled) return;
 
     final pct = progressPercent;
 
     if (pct >= 1.0 && !_alert100Shown) {
       _alert100Shown = true;
+      _alert80Shown = true;
+      _alert50Shown = true;
       _showOverBudgetAlert();
     } else if (pct >= 0.8 && !_alert80Shown) {
       _alert80Shown = true;
+      _alert50Shown = true;
       _showThresholdSnackbar(
         '⚠️ 80% of budget used',
         'Only ₱${remaining.toStringAsFixed(2)} remaining.',
@@ -421,6 +463,7 @@ class CartProvider with ChangeNotifier {
     final context = navigatorKey.currentContext;
     if (context == null) return;
 
+    final overBudget = totalSpent - budgetLimit;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showDialog(
         context: context,
@@ -457,7 +500,9 @@ class CartProvider with ChangeNotifier {
               ),
               const SizedBox(height: 10),
               Text(
-                'Your cart is over budget by ₱${(totalSpent - budgetLimit).toStringAsFixed(2)}. Consider swapping to cheaper alternatives.',
+                overBudget > 0
+                    ? 'You are over budget by ₱${overBudget.toStringAsFixed(2)}. Review your purchases or adjust your budget.'
+                    : 'You have used your full budget. Review your purchases before adding more items.',
                 style: const TextStyle(color: Colors.white70, fontSize: 14),
                 textAlign: TextAlign.center,
               ),

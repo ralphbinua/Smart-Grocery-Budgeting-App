@@ -12,7 +12,7 @@ class AIRecommendationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
     final itemsWithAlt = cart.items
-        .where((i) => i.alternative != null)
+        .where((i) => i.alternative != null && !i.isPurchased)
         .toList();
     final itemsWithDeals = cart.items
         .where((i) => i.coupons.isNotEmpty)
