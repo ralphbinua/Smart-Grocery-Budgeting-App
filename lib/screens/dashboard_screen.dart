@@ -1,11 +1,19 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
+import '../services/product_lookup_service.dart';
+import '../services/product_vision_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/budget_ring.dart';
 import '../widgets/cart_item_tile.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/grocery_item_input_tile.dart';
+import '../widgets/product_photo_capture_dialog.dart';
+import '../widgets/product_price_entry_dialog.dart';
 import '../widgets/stat_card.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -20,6 +28,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   final TextEditingController _itemController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final FocusNode _itemFocus = FocusNode();
+  String? _pendingBarcode;
+  String? _pendingBrand;
+  String? _pendingProductSize;
+  bool _isLookingUpBarcode = false;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
 
@@ -48,10 +60,366 @@ class _DashboardScreenState extends State<DashboardScreen>
     final name = _itemController.text.trim();
     if (name.isEmpty) return;
     final price = double.tryParse(_priceController.text.trim());
-    cart.addGroceryItem(name, estimatedPrice: price);
+    if (_pendingBarcode != null && (price == null || price <= 0)) {
+      return;
+    }
+    cart.addGroceryItem(
+      name,
+      estimatedPrice: price,
+      barcode: _pendingBarcode,
+      brand: _pendingBrand,
+      productSize: _pendingProductSize,
+    );
+    _saveProductInDatabase(
+      name: name,
+      barcode: _pendingBarcode,
+      brand: _pendingBrand,
+      quantity: _pendingProductSize,
+      latestPrice: price,
+      showErrors: false,
+    );
     _itemController.clear();
     _priceController.clear();
+    _pendingBarcode = null;
+    _pendingBrand = null;
+    _pendingProductSize = null;
     _itemFocus.requestFocus();
+  }
+
+  Future<void> _scanBarcode(CartProvider cart) async {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Barcode scanning is unavailable in the Windows app.'),
+        ),
+      );
+      return;
+    }
+
+    final barcode = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: const Text(
+          'Scan product barcode',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: SizedBox(
+          width: 360,
+          height: 300,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: MobileScanner(
+              onDetect: (capture) {
+                final value = capture.barcodes
+                    .map((barcode) => barcode.rawValue)
+                    .whereType<String>()
+                    .firstWhere(
+                      (value) => value.trim().isNotEmpty,
+                      orElse: () => '',
+                    );
+                if (value.isNotEmpty && dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop(value.trim());
+                }
+              },
+              errorBuilder: (context, error) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Camera unavailable: ${error.errorCode.name}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (barcode == null || !mounted) return;
+    setState(() {
+      _isLookingUpBarcode = true;
+      _pendingBarcode = barcode;
+    });
+
+    try {
+      final product = await ProductLookupService.lookupByBarcode(barcode);
+      if (!mounted) return;
+      if (product != null) {
+        final name = product['name']?.toString().trim() ?? '';
+        final price = (product['latestPrice'] as num?)?.toDouble();
+        if (name.isNotEmpty) {
+          final enteredPrice = price ?? await _promptForProductPrice(product);
+          if (!mounted) return;
+          if (enteredPrice != null) {
+            _addCatalogProduct(
+              cart,
+              product,
+              barcode,
+              priceOverride: enteredPrice,
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Added $name · ₱${enteredPrice.toStringAsFixed(2)}',
+                ),
+              ),
+            );
+          } else {
+            _prepareManualBarcodeEntry(
+              barcode,
+              suggestedName: name,
+              brand: product['brand']?.toString(),
+              productSize: product['quantity']?.toString(),
+            );
+          }
+          return;
+        }
+      }
+
+      await _handleUnknownBarcode(barcode, cart);
+    } catch (error) {
+      if (!mounted) return;
+      _prepareManualBarcodeEntry(barcode);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not look up this barcode. Enter the product name and optional price manually. ($error)',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLookingUpBarcode = false);
+    }
+  }
+
+  void _addCatalogProduct(
+    CartProvider cart,
+    Map<String, dynamic> product,
+    String scannedBarcode, {
+    double? priceOverride,
+  }) {
+    final name = product['name']?.toString().trim() ?? '';
+    final price = priceOverride ?? (product['latestPrice'] as num?)?.toDouble();
+    if (name.isEmpty || price == null) return;
+
+    cart.addGroceryItem(
+      name,
+      estimatedPrice: price,
+      barcode: scannedBarcode,
+      brand: product['brand']?.toString(),
+      productSize: product['quantity']?.toString(),
+    );
+    _saveProductInDatabase(
+      name: name,
+      barcode: scannedBarcode,
+      brand: product['brand']?.toString(),
+      quantity: product['quantity']?.toString(),
+      category: product['category']?.toString(),
+      latestPrice: price,
+    );
+    _itemController.clear();
+    _priceController.clear();
+    setState(() {
+      _pendingBarcode = null;
+      _pendingBrand = null;
+      _pendingProductSize = null;
+    });
+  }
+
+  void _saveProductInDatabase({
+    required String name,
+    String? barcode,
+    String? brand,
+    String? quantity,
+    String? category,
+    double? latestPrice,
+    bool showErrors = true,
+  }) {
+    unawaited(
+      _persistProductInDatabase(
+        name: name,
+        barcode: barcode,
+        brand: brand,
+        quantity: quantity,
+        category: category,
+        latestPrice: latestPrice,
+        showErrors: showErrors,
+      ),
+    );
+  }
+
+  Future<void> _persistProductInDatabase({
+    required String name,
+    String? barcode,
+    String? brand,
+    String? quantity,
+    String? category,
+    double? latestPrice,
+    required bool showErrors,
+  }) async {
+    try {
+      await ProductLookupService.saveProduct(
+        name: name,
+        barcode: barcode,
+        brand: brand,
+        quantity: quantity,
+        category: category,
+        latestPrice: latestPrice,
+      );
+    } catch (error) {
+      if (showErrors && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Added $name to your list, but database save failed: $error',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleUnknownBarcode(String barcode, CartProvider cart) async {
+    if (!mounted) return;
+    await _identifyAndMatchProduct(barcode, cart);
+  }
+
+  Future<void> _identifyAndMatchProduct(
+    String barcode,
+    CartProvider cart,
+  ) async {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
+      _prepareManualBarcodeEntry(barcode);
+      _showManualFallbackMessage(
+        'Product photo scanning is unavailable in the Windows app. Enter the product name manually.',
+      );
+      return;
+    }
+
+    final imageBytes = await ProductPhotoCaptureDialog.show(context);
+    if (!mounted) return;
+    if (imageBytes == null) {
+      _prepareManualBarcodeEntry(barcode);
+      _showManualFallbackMessage(
+        'Photo scan cancelled. The barcode is saved; enter the product name manually.',
+      );
+      return;
+    }
+
+    try {
+      final identity = await ProductVisionService.identifyProduct(
+        imageBytes: imageBytes,
+        barcode: barcode,
+      );
+      Map<String, dynamic>? product;
+      if (identity != null) {
+        product = await ProductLookupService.matchProductName(
+          name: identity.name,
+          brand: identity.brand,
+          quantity: identity.quantity,
+        );
+      }
+
+      final productDetails =
+          product ??
+          (identity == null
+              ? null
+              : <String, dynamic>{
+                  'name': identity.name,
+                  if (identity.brand != null) 'brand': identity.brand,
+                  if (identity.quantity != null) 'quantity': identity.quantity,
+                  'category': 'General',
+                });
+
+      if (!mounted) return;
+      if (productDetails != null) {
+        final enteredPrice = await _promptForProductPrice(productDetails);
+        if (!mounted) return;
+        if (enteredPrice != null) {
+          _addCatalogProduct(
+            cart,
+            productDetails,
+            barcode,
+            priceOverride: enteredPrice,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Added ${productDetails['name']} · ₱${enteredPrice.toStringAsFixed(2)}',
+              ),
+            ),
+          );
+        } else {
+          _prepareManualBarcodeEntry(
+            barcode,
+            suggestedName: productDetails['name']?.toString(),
+            brand: productDetails['brand']?.toString(),
+            productSize: productDetails['quantity']?.toString(),
+            requestFocus: false,
+          );
+        }
+        return;
+      }
+
+      _prepareManualBarcodeEntry(barcode);
+      _showManualFallbackMessage(
+        'AI could not read the product clearly. Enter its name and price manually.',
+      );
+    } catch (error) {
+      if (!mounted) return;
+      _prepareManualBarcodeEntry(barcode);
+      _showManualFallbackMessage(
+        'Could not identify or match the product. Enter its name and optional price manually. ($error)',
+      );
+    }
+  }
+
+  Future<double?> _promptForProductPrice(Map<String, dynamic> product) {
+    return showDialog<double>(
+      context: context,
+      builder: (_) => ProductPriceEntryDialog(
+        name: product['name']?.toString() ?? 'Unknown product',
+        brand: product['brand']?.toString(),
+        quantity: product['quantity']?.toString(),
+      ),
+    );
+  }
+
+  void _showManualFallbackMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _prepareManualBarcodeEntry(
+    String barcode, {
+    String? suggestedName,
+    double? suggestedPrice,
+    String? brand,
+    String? productSize,
+    bool requestFocus = true,
+  }) {
+    setState(() {
+      _pendingBarcode = barcode;
+      _pendingBrand = brand;
+      _pendingProductSize = productSize;
+      if (_itemController.text.trim().isEmpty && suggestedName != null) {
+        _itemController.text = suggestedName;
+      }
+      if (_priceController.text.trim().isEmpty && suggestedPrice != null) {
+        _priceController.text = suggestedPrice.toStringAsFixed(2);
+      }
+    });
+    if (requestFocus) _itemFocus.requestFocus();
   }
 
   @override
@@ -151,6 +519,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                       name: name,
                       quantity: qty,
                       estimatedPrice: price,
+                      brand: cart.groceryList[index].brand,
+                      productSize: cart.groceryList[index].productSize,
                     ),
                   ),
                 ),
@@ -685,6 +1055,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                     color: Colors.black,
                     size: 20,
                   ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 42,
+                height: 42,
+                child: IconButton(
+                  tooltip: 'Scan barcode',
+                  onPressed: _isLookingUpBarcode
+                      ? null
+                      : () => _scanBarcode(cart),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.bgCardAlt,
+                    foregroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  icon: _isLookingUpBarcode
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.qr_code_scanner_rounded, size: 20),
                 ),
               ),
             ],

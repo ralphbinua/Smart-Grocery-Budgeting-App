@@ -5,11 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/grocery_input_item.dart';
 
 class AIService {
-  static String get _apiKey =>
-      dotenv.env['GROQ_API_KEY'] ??
-      dotenv.env['OPENAI_API_KEY'] ??
-      dotenv.env['GEMINI_API_KEY'] ??
-      '';
+  static String get _apiKey => dotenv.env['GROQ_API_KEY'] ?? '';
 
   static const String _apiUrl =
       'https://api.groq.com/openai/v1/chat/completions';
@@ -39,10 +35,12 @@ class AIService {
       return {
         'name': i.name,
         'quantity': i.quantity,
+        if (i.brand != null && i.brand!.isNotEmpty) 'brand': i.brand,
+        if (i.productSize != null && i.productSize!.isNotEmpty)
+          'packageSize': i.productSize,
         if (grounding != null) 'dbPrice': grounding['price'],
         if (grounding != null) 'dbCategory': grounding['category'],
-        if (i.estimatedPrice != null && grounding == null)
-          'estimatedPrice': i.estimatedPrice,
+        if (i.estimatedPrice != null) 'userProvidedPrice': i.estimatedPrice,
       };
     }).toList();
 
@@ -55,8 +53,9 @@ ${jsonEncode(itemsJson)}
 For EACH item in the list, provide a JSON object with:
 1. "name" (String) — the original product name. If "dbPrice" is active, please keep the exact product name from the database.
 2. "price" (Number) — a realistic price in Philippine Peso (PHP) for that item.
-   - CRITICAL: If "dbPrice" is provided, you MUST use that exact "dbPrice" value.
-   - If "dbPrice" is not provided, use the "estimatedPrice" if provided, otherwise estimate a realistic market price.
+   - If "userProvidedPrice" is provided, you MUST use that exact price, even when "dbPrice" is also provided.
+   - Otherwise, if "dbPrice" is provided, you MUST use that exact "dbPrice" value.
+   - Otherwise, estimate a realistic market price.
 3. "category" (String) — If "dbCategory" is provided, you MUST use that exact category. Otherwise, use one of: Dairy, Bakery, Beverages, Snacks, Meat, Canned Goods, Instant Food, Produce, Condiments, Personal Care, Household, Frozen, General.
 4. "alternative" (Object or null) — if a cheaper, commonly available alternative exists in PH:
    { "name": "...", "price": <number less than price> }

@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-  barcode: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
+  barcode: { type: String, trim: true, sparse: true, unique: true },
+  name: { type: String, required: true, trim: true },
   category: { type: String, default: 'General' },
   brand: { type: String },
   quantity: { type: String },
-  latestPrice: { type: Number, required: true },
+  latestPrice: { type: Number, min: 0 },
   priceHistory: [
     {
       price: { type: Number },

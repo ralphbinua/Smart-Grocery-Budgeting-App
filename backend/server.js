@@ -51,18 +51,68 @@ app.get('/api/trips', async (req, res) => {
 // Save or Update a Product (For price tracking)
 app.post('/api/products', async (req, res) => {
   try {
-    const { barcode, latestPrice } = req.body;
-    let product = await Product.findOne({ barcode });
+    const { barcode, latestPrice, name, brand, quantity, category } = req.body;
+    const cleanName = typeof name === 'string' ? name.trim() : '';
+    const cleanBarcode = typeof barcode === 'string' ? barcode.trim() : '';
+    const cleanBrand = typeof brand === 'string' ? brand.trim() : '';
+    const cleanQuantity = typeof quantity === 'string' ? quantity.trim() : '';
+
+    if (!cleanName) {
+      return res.status(400).json({ error: 'Product name is required' });
+    }
+    if (latestPrice != null && (!Number.isFinite(Number(latestPrice)) || Number(latestPrice) < 0)) {
+      return res.status(400).json({ error: 'latestPrice must be a non-negative number' });
+    }
+
+    let product = cleanBarcode
+      ? await Product.findOne({ barcode: cleanBarcode })
+      : null;
+
+    // A barcode miss can still refer to a catalog product recognized by name,
+    // brand, and package size. Reuse it instead of creating a duplicate.
+    if (!product) {
+      const candidates = await Product.find({
+        name: { $regex: `^${escapeRegex(cleanName)}$`, $options: 'i' },
+      });
+      const normalizedBrand = cleanBrand.toLowerCase();
+      const normalizedQuantity = cleanQuantity.toLowerCase();
+      const matches = candidates.filter((candidate) =>
+        (!normalizedBrand || (candidate.brand || '').trim().toLowerCase() === normalizedBrand) &&
+        (!normalizedQuantity || (candidate.quantity || '').trim().toLowerCase() === normalizedQuantity)
+      );
+      if (matches.length === 1) product = matches[0];
+    }
 
     if (product) {
-      product.priceHistory.push({ price: product.latestPrice }); // Save old price
-      product.latestPrice = latestPrice;
-      Object.assign(product, req.body); // Update other fields
-      await product.save();
+      if (cleanBarcode && !product.barcode) {
+        product.barcode = cleanBarcode;
+      }
+      if (latestPrice != null && Number(product.latestPrice) !== Number(latestPrice)) {
+        if (product.latestPrice != null) {
+          product.priceHistory.push({ price: product.latestPrice });
+        }
+        product.latestPrice = Number(latestPrice);
+      }
+      if (cleanName) product.name = cleanName;
+      if (cleanBrand) product.brand = cleanBrand;
+      if (cleanQuantity) product.quantity = cleanQuantity;
+      if (typeof category === 'string' && category.trim()) {
+        product.category = category.trim();
+      }
     } else {
-      product = new Product(req.body);
-      await product.save();
+      product = new Product({
+        ...(cleanBarcode ? { barcode: cleanBarcode } : {}),
+        name: cleanName,
+        ...(cleanBrand ? { brand: cleanBrand } : {}),
+        ...(cleanQuantity ? { quantity: cleanQuantity } : {}),
+        ...(typeof category === 'string' && category.trim()
+          ? { category: category.trim() }
+          : {}),
+        ...(latestPrice != null ? { latestPrice: Number(latestPrice) } : {}),
+      });
     }
+
+    await product.save();
     res.status(200).json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });

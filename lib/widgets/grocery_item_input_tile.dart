@@ -90,26 +90,44 @@ class _GroceryItemInputTileState extends State<GroceryItemInputTile> {
           fontWeight: FontWeight.w600,
         ),
       ),
-      subtitle: Row(
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Qty: ${widget.item.quantity}',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
-          ),
-          if (widget.item.estimatedPrice != null) ...[
-            const Text(
-              ' · ',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
-            ),
+          if ((widget.item.brand?.isNotEmpty ?? false) ||
+              (widget.item.productSize?.isNotEmpty ?? false))
             Text(
-              '₱${widget.item.estimatedPrice!.toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
+              [
+                if (widget.item.brand?.isNotEmpty ?? false) widget.item.brand!,
+                if (widget.item.productSize?.isNotEmpty ?? false)
+                  widget.item.productSize!,
+              ].join(' · '),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
             ),
-          ],
+          Row(
+            children: [
+              Text(
+                'Qty: ${widget.item.quantity}',
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                ),
+              ),
+              if (widget.item.estimatedPrice != null) ...[
+                const Text(
+                  ' · ',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                ),
+                Text(
+                  '₱${widget.item.estimatedPrice!.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
       trailing: Row(

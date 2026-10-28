@@ -44,8 +44,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Environment variables
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
+!**/.env.example
 
 
 node_modules/

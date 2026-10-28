@@ -105,11 +105,23 @@ class CartProvider with ChangeNotifier {
   }
 
   // ─── Grocery Input List Operations ───────────────────────────────────────────
-  void addGroceryItem(String name, {int quantity = 1, double? estimatedPrice}) {
+  void addGroceryItem(
+    String name, {
+    int quantity = 1,
+    double? estimatedPrice,
+    String? barcode,
+    String? brand,
+    String? productSize,
+  }) {
     if (name.trim().isEmpty) return;
-    // Check for duplicates (case-insensitive)
+    final normalizedSize = productSize?.trim().toLowerCase() ?? '';
+    final normalizedBrand = brand?.trim().toLowerCase() ?? '';
+    // Different package sizes and brands are separate products.
     final exists = _groceryList.any(
-      (i) => i.name.toLowerCase() == name.trim().toLowerCase(),
+      (i) =>
+          i.name.toLowerCase() == name.trim().toLowerCase() &&
+          (i.productSize?.trim().toLowerCase() ?? '') == normalizedSize &&
+          (i.brand?.trim().toLowerCase() ?? '') == normalizedBrand,
     );
     if (exists) return;
 
@@ -119,6 +131,9 @@ class CartProvider with ChangeNotifier {
         name: name.trim(),
         quantity: quantity,
         estimatedPrice: estimatedPrice,
+        barcode: barcode,
+        brand: brand,
+        productSize: productSize,
       ),
     );
     notifyListeners();
@@ -134,6 +149,9 @@ class CartProvider with ChangeNotifier {
     String? name,
     int? quantity,
     double? estimatedPrice,
+    String? barcode,
+    String? brand,
+    String? productSize,
   }) {
     final idx = _groceryList.indexWhere((i) => i.id == id);
     if (idx < 0) return;
@@ -141,6 +159,9 @@ class CartProvider with ChangeNotifier {
     if (name != null) item.name = name;
     if (quantity != null) item.quantity = quantity;
     if (estimatedPrice != null) item.estimatedPrice = estimatedPrice;
+    if (barcode != null) item.barcode = barcode;
+    if (brand != null) item.brand = brand;
+    if (productSize != null) item.productSize = productSize;
     notifyListeners();
   }
 
@@ -211,7 +232,7 @@ class CartProvider with ChangeNotifier {
         }
 
         final double price =
-            (r['price'] as num?)?.toDouble() ?? input.estimatedPrice ?? 50.0;
+            input.estimatedPrice ?? (r['price'] as num?)?.toDouble() ?? 50.0;
         final String category = r['category'] as String? ?? 'General';
         final Map<String, dynamic>? alt =
             r['alternative'] as Map<String, dynamic>?;
