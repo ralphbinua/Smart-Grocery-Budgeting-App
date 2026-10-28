@@ -218,18 +218,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                         ),
                       ),
-                    if (cart.purchasedItemCount > 0)
-                      IconButton(
-                        onPressed: () => _showCheckoutConfirm(context),
-                        icon: const Icon(
-                          Icons.receipt_long_rounded,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                        tooltip: 'Checkout',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
+                    // (Old small checkout icon button removed — replaced by the
+                    //  big checkout button at the end of this list.)
                   ],
                 ),
               ),
@@ -241,6 +231,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: CartItemTile(item: cart.items[index]),
                 ),
                 childCount: cart.items.length,
+              ),
+            ),
+            // ── Big Checkout Button (end of list) ──────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: _buildCheckoutButton(context, cart),
               ),
             ),
           ],
@@ -866,6 +863,42 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         );
       }).toList(),
+    );
+  }
+
+  // ─── Checkout Button ─────────────────────────────────────────────────────────
+  Widget _buildCheckoutButton(BuildContext context, CartProvider cart) {
+    final enabled = cart.purchasedItemCount > 0;
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 64,
+          child: ElevatedButton.icon(
+            onPressed: enabled ? () => _showCheckoutConfirm(context) : null,
+            icon: const Icon(Icons.receipt_long_rounded, size: 26),
+            label: Text(
+              enabled
+                  ? 'Checkout · ₱${cart.totalSpent.toStringAsFixed(2)}'
+                  : 'Checkout',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        if (!enabled)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(
+              'Mark items as purchased to check out',
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+            ),
+          ),
+      ],
     );
   }
 
